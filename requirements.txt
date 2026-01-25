@@ -1,3 +1,6 @@
 python-jobspy
 pandas
 openpyxl
+streamlit
+altair
+jobspy

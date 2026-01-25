@@ -1,19 +1,19 @@
-import Session
-import Listing
+from datetime import datetime
+from session import Session
+from listing import Listing
+from config import config
 import sqlite3
-import config
-from typing import list
-# Persistence layer using SQLite3 and Pandas
+import json
 
 class Database:
     conn: sqlite3.Connection
     
     def __init__(self):
         self.conn = sqlite3.connect(config.database.file)
+        self.conn.row_factory = sqlite3.Row
         self.provision()
     
     def provision(self) -> None:
-        """Read and execute the schema file"""
         with open(config.database.schema, 'r') as f:
             schema_sql = f.read()
         
@@ -21,39 +21,67 @@ class Database:
         cursor.executescript(schema_sql)
         self.conn.commit()
 
-    def save_session(self, session: Session) -> int:
-
-        sql = "INSERT INTO scrape_session (title, datetime_start, datetime_finish, meta) VALUES (?, ?, ?, ?)"
-        
-        cursor = self.conn.cursor()
-        cursor.execute(sql, (session.title, session.start_time, session.finish_time, session.metaToJson()))
-        self.conn.commit()
-        return cursor.lastrowid
-
-    def get_all_sessions(self) -> list[Session]:
-        """Retrieves a list of all scrape sessions."""
-        sql = "SELECT id, datetime_start, datetime_finish, meta FROM scrape_session ORDER BY datetime_start DESC"
+    def get_index(self) -> dict[int, str]:
+        sql = "SELECT * FROM sessions ORDER BY id DESC"
         cursor = self.conn.cursor()
         cursor.execute(sql)
-        return [Session(**row) for row in cursor.fetchall()]
+        index: dict[int, str] = {row['id']: row['title'] for row in cursor.fetchall()}
+        return index
 
-    def get_one_session(self, session_id: int) -> Session:
-        """Retrieves a specific scrape session."""
-        sql = "SELECT id, datetime_start, datetime_finish, meta FROM scrape_session WHERE id = ?"
+    def save_session(self, session: Session) -> int:
+        session_sql = "INSERT INTO sessions (title, datetime_start, datetime_finish, meta) VALUES (?, ?, ?, ?)"
         cursor = self.conn.cursor()
-        cursor.execute(sql, (session_id))
-        return Session(**cursor.fetchone())
-
-    def save_listing(self, listing: Listing) -> int:
-        sql = "INSERT INTO scrape_data (scrape_session_id, location, company, job_level, title, date_posted, raw_data) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        cursor = self.conn.cursor()
-        cursor.execute(sql, (listing.session_id, listing.location, listing.company, listing.job_level, listing.title, listing.date_posted, listing.raw_data))
+        cursor.execute(session_sql, (session.title, session.start_time, session.finish_time, json.dumps(session.meta)))
+        session_id: int = cursor.lastrowid
+        for listing in session.listings:
+            self.save_listing(session_id, listing)
         self.conn.commit()
-        return cursor.lastrowid
+        return session_id
 
-    def get_session_listings(self, session: Session) -> list[Listing]:
-        """Retrieves dataframe for a specific session."""
+    def get_session(self, session_id) -> Session:
+        sql = "SELECT id, title, datetime_start, datetime_finish, meta FROM sessions WHERE id = ? ORDER BY datetime_start DESC"
+        cursor = self.conn.cursor()
+        row = cursor.execute(sql,(session_id,)).fetchone()
+        session = Session(row['title'])
+        session.id = int(row['id'])
+        session.start_time = datetime.fromisoformat(row['datetime_start'])
+        session.finish_time = datetime.fromisoformat(row['datetime_finish'])
+        session.meta = json.loads(row['meta'])
+        session.listings = self.get_listings(session)
+        return session
+
+    def get_listings(self, session: Session) -> list[Listing]:
         sql = "SELECT * FROM listings WHERE session_id = ?"
         cursor = self.conn.cursor()
-        cursor.execute(sql, (session.id))
-        return [Listing(**row) for row in cursor.fetchall()]
+        cursor.execute(sql, (session.id,))
+        rows = cursor.fetchall()
+        listings: list[Listing] = []
+        for row in rows:
+            listing = Listing()
+            listing.id = int(row['id'])
+            listing.session_id = session.id
+            listing.location = row['location']
+            listing.company = row['company']
+            listing.job_level = row['job_level']
+            listing.title = row['title']
+            listing.date_posted = row['date_posted']
+            listing.raw_data = row['raw_data']
+            listings.append(listing)
+        return listings
+
+    # only called within save_session, no commit required
+    def save_listing(self, session_id: int, listing: Listing) -> int:
+        sql = ("INSERT INTO listings "
+               "(session_id, location, company, job_level, title, date_posted, raw_data) "
+               "VALUES (?, ?, ?, ?, ?, ?, ?)")
+        cursor = self.conn.cursor()
+        cursor.execute(
+            sql,
+            (session_id,
+             listing.location,
+             listing.company,
+             listing.job_level,
+             listing.title,
+             listing.date_posted,
+             listing.raw_data))
+        return cursor.lastrowid

@@ -1,0 +1,22 @@
+{
+  "languages": [
+    "golang",
+    "javascript",
+    "elixir",
+    "swift",
+    "scala",
+    "ruby",
+    "python",
+    "haskell",
+    "java",
+    "rust",
+    "kotlin",
+    "go",
+    "php",
+    "clojure",
+    "csharp",
+    "cpp",
+    "erlang",
+    "typescript"
+  ]
+}

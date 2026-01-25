@@ -9,12 +9,14 @@ def to_namespace(d):
         for k, v in d.items()
     })
 
-data_dir = Path(os.path.dirname(__file__)).joinpath("data")
+base_dir = Path(__file__).parent
+data_dir = Path(base_dir).joinpath("data")
 
 config = to_namespace({
     "data_dir": data_dir,
+    "keywords": base_dir.joinpath("keywords"),
     "database": {
         "file": data_dir.joinpath("database.db"),
-        "schema": data_dir.joinpath("schema.sql")
+        "schema": base_dir.joinpath("schema.sql")
     }
 })

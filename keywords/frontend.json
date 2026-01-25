@@ -1,0 +1,12 @@
+{
+  "frontend": [
+    "react",
+    "nuxt",
+    "remix",
+    "svelte",
+    "nextjs",
+    "gatsby",
+    "angular",
+    "vue"
+  ]
+}
