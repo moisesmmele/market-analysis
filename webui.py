@@ -1,16 +1,21 @@
 from jobspy_processor import JobspyProcessor
 from topic_loader import TopicLoader
-from streamlit import session_state
 from database import Database
 import streamlit as st
 import altair as alt
-
-from session import Session
-
-db = Database()
-topic_loader = TopicLoader()
-
 import pandas as pd
+
+#"singletons" using streamlit cache
+@st.cache_resource
+def get_database() -> Database:
+    return Database()
+db = get_database()
+
+@st.cache_resource
+def get_topic_loader() -> TopicLoader:
+    return TopicLoader()
+topic_loader = get_topic_loader()
+
 
 def make_chart(counts: dict, total_listings: int, limit: int = 30):
     data = pd.DataFrame(list(counts.items()), columns=["keyword", "count"])
@@ -127,8 +132,8 @@ def render_dashboard(results, limit: int = 30):
             
             st.divider()
 
-st.set_page_config(page_title="Job Market Analysis", page_icon="💀", layout="wide")
-st.title("💀 Job Market Analysis")
+st.set_page_config(page_title="Job Market Analysis", page_icon="💡", layout="wide")
+st.title("💡 Job Market Analysis")
 st.space()
 
 # --- Sidebar: Session Selection ---
@@ -159,7 +164,7 @@ with st.sidebar:
                 selected_topic_titles.append(topic)
 
     st.text("\n")
-    top_n = st.number_input(label="Top Keywords to Display", min_value=5, max_value=100, value=30, step=1)
+    top_n = st.number_input(label="Top Keywords to Display", min_value=5, max_value=100, value=20, step=1)
 
     if st.button("Load Session", type="primary"):
         session = db.get_session(selected_session)

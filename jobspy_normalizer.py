@@ -1,5 +1,3 @@
-from click import echo
-
 from listing import Listing
 import pandas as pd
 import json
@@ -7,31 +5,36 @@ import json
 """Normalization module to convert Jobspy Ingest data into agnostic entities AND entities into jobspy data format"""
 class JobspyNormalizer:
 
-    @staticmethod
-    def from_df(df: pd.DataFrame) -> list[Listing]:
-        """Converts a DataFrame to a list of Listings."""
-        records: list[dict] = df.to_dict('records')
-        listings: list[Listing] = [JobspyNormalizer.from_dict(record) for record in records]
-        return listings
+    # Field mappings
+    # Key: Canonical Name
+    # Value: Jobspy Name
+    FIELD_MAPS = {
+        'location': 'location',
+        'company': 'company',
+        'job_level': 'job_level',
+        'title': 'title',
+        'date_posted': 'date_posted',
+    }
 
-    @staticmethod
-    def from_dict(data: dict) -> Listing:
+    @classmethod
+    def from_df(cls, df: pd.DataFrame) -> list[Listing]:
+        """Converts a DataFrame to a list of Listings."""
+        return [cls.from_dict(record) for record in df.to_dict('records')]
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Listing:
         """Converts a dictionary to a Listing using Jobspy mappings"""
-        listing = Listing()
-        listing.location = data.get('location')
-        listing.company = data.get('company')
-        listing.job_level = data.get('job_level')
-        listing.title = data.get('title')
-        listing.date_posted = data.get('date_posted')
-        
-        listing.raw_data = json.dumps(data, default=str)
+
+        mapped_data = {
+            canonical: data.get(jobspy_key)
+            for canonical, jobspy_key in cls.FIELD_MAPS.items()
+        }
+
+        listing = Listing(**mapped_data)
+        listing.raw_data = json.dumps(data, default=str) if data else None
         return listing
 
-    @staticmethod
-    def to_df(listings: list[Listing]) -> pd.DataFrame:
+    @classmethod
+    def to_df(cls, listings: list[Listing]) -> pd.DataFrame:
         """converts a list of Listings back to a DataFrame. Uses raw_data from jobspy scrape jobs."""
-        if not listings:
-            return pd.DataFrame()
-            
-        data: list[dict] = [json.loads(listing.raw_data) for listing in listings]
-        return pd.DataFrame(data)
+        return pd.DataFrame([json.loads(listing.raw_data) for listing in listings if listing.raw_data])

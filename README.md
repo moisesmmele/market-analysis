@@ -30,8 +30,25 @@ python scraper.py --term "Python Developer" --location "Brazil" --count 50 --tit
 ### 2. Launch Dashboard
 Start the web interface to analyze the collected data.
 
-```bash
 streamlit run webui.py
+```
+
+## Docker Usage
+
+### 1. Build and Run Web UI
+To start the dashboard using Docker:
+
+```bash
+docker compose up --build
+```
+
+The application will be available at `http://localhost:8501`. Data will be persisted in the `./data` directory on your host machine.
+
+### 2. Run Scraper via Docker
+To run the scraper inside a container:
+
+```bash
+docker compose run --rm web-app python scraper.py --term "Python Developer" --location "Brazil" --count 50 --title "Python Brazil Session"
 ```
 
 ## Structure

@@ -1,8 +1,5 @@
-from dataclasses import dataclass
 from typing import Dict, Any, List
 from datetime import datetime
-import json
-
 from listing import Listing
 
 class Session:

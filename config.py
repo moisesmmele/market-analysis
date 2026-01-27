@@ -1,5 +1,9 @@
-from pathlib import Path
 from types import SimpleNamespace
+from pathlib import Path
+
+# Base Values
+base_dir = Path(__file__).parent
+data_dir = Path(base_dir).joinpath("data")
 
 # Recursive namespace conversion from config dict
 def to_namespace(d):
@@ -8,9 +12,7 @@ def to_namespace(d):
         for k, v in d.items()
     })
 
-base_dir = Path(__file__).parent
-data_dir = Path(base_dir).joinpath("data")
-
+# config with namespace mapping for access with dot notation
 config = to_namespace({
     "data_dir": data_dir,
     "topics": base_dir.joinpath("topics"),

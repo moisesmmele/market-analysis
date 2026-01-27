@@ -45,7 +45,7 @@ class TextProcessor:
         return dict(counted)
 
     @staticmethod
-    def find_matches(source: set[str], words_to_match: dict[set[str]]) -> set[str]:
+    def find_matches(source: set[str], words_to_match: dict[str, list[str]]) -> set[str]:
         matches: set[str] = set()
         for canonical, aliases in words_to_match.items():
             if canonical in source:
