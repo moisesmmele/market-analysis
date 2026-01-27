@@ -85,7 +85,7 @@ class Database:
     def get_listings(self, session: Session) -> list[Listing]:
         """retrieves listings for a given session"""
 
-        sql = "SELECT * FROM listings WHERE session_id = ?"
+        sql = "SELECT id, location, company, job_level, title, date_posted, raw_data FROM listings WHERE session_id = ?"
         cursor = self.conn.cursor()
         cursor.execute(sql, (session.id,))
         rows = cursor.fetchall()

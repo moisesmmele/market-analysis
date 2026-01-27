@@ -63,7 +63,7 @@ class JobspyProcessor:
             # For future refactors/abstraction, we should make sure
             # Description is either hoisted or mapped to something else
             description = json.loads(listing.raw_data).get("description")
-            sanitized = TextProcessor.sanitize(description)
+            sanitized = TextProcessor.sanitize(description + " " + listing.title)
             # extract words and bigrams
             words = sanitized.split()
             bigrams = TextProcessor.extract_bigrams(sanitized)

@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
+
 
 @dataclass
 class Listing:
@@ -8,5 +10,6 @@ class Listing:
     job_level: str
     title: str
     date_posted: datetime
-    id: int = None
-    raw_data: str = None
+    session_id: Optional[int] = None
+    id: Optional[str] = None
+    raw_data: Optional[str] = None
