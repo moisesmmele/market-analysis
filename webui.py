@@ -170,12 +170,16 @@ with st.sidebar:
     st.divider()
     st.markdown("""
     ### ℹ️ About this Dashboard
-    This tool visualizes job market data scraped from various sources.
-    
+    This tool visualizes job market data trends and statistics.
+
     **How to use:**
     1. **Select a Session:** Choose a dataset from the dropdown above.
-    2. **Load Data:** Click 'Load Session' to visualize the metrics.
-    3. **Explore:** View top keywords, filter by job levels, and analyze trends.
+    2. **Filter Topics:** Toggle specific topics to refine your analysis.
+    3. **Load Data:** Click 'Load Session' to generate the report.
+    
+    **Sections:**
+    - **Overview:** General metrics and keyword popularity.
+    - **Job Levels:** Breakdown of data by seniority (Junior, Senior, etc.).
     """)
 
 if 'current_session' in st.session_state:
