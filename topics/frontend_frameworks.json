@@ -1,0 +1,58 @@
+{
+    "title": "Frontend Frameworks",
+    "description": "Libraries and frameworks for building interactive user interfaces.",
+    "terms": {
+        "react": [
+            "reactjs",
+            "react.js"
+        ],
+        "vue": [
+            "vuejs",
+            "vue.js",
+            "vue 3",
+            "vue 2"
+        ],
+        "angular": [
+            "angularjs",
+            "angular.js",
+            "ng"
+        ],
+        "svelte": [
+            "sveltejs"
+        ],
+        "nextjs": [
+            "next.js",
+            "next"
+        ],
+        "nuxtjs": [
+            "nuxt",
+            "nuxt.js"
+        ],
+        "gatsby": [
+            "gatsbyjs"
+        ],
+        "remix": [
+            "remix.run",
+            "remix run"
+        ],
+        "solidjs": [
+            "solid"
+        ],
+        "alpinejs": [
+            "alpine"
+        ],
+        "preact": [],
+        "lit": [
+            "lit-element",
+            "lithtml"
+        ],
+        "qwik": [],
+        "ember": [
+            "ember.js"
+        ],
+        "backbone": [
+            "backbone.js"
+        ],
+        "htmx": []
+    }
+}

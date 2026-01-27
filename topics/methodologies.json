@@ -1,0 +1,97 @@
+{
+    "title": "Methodologies & Concepts",
+    "description": "Software development methodologies, architectural concepts, and engineering best practices.",
+    "terms": {
+        "agile": [
+            "agile methodology"
+        ],
+        "scrum": [],
+        "kanban": [],
+        "waterfall": [],
+        "lean": [
+            "lean software development"
+        ],
+        "xp": [
+            "extreme programming"
+        ],
+        "safe": [
+            "scaled agile framework"
+        ],
+        "cicd": [
+            "ci/cd",
+            "continuous integration",
+            "continuous deployment"
+        ],
+        "devops": [],
+        "testing": [
+            "qa",
+            "quality assurance",
+            "unit testing",
+            "integration testing",
+            "e2e testing"
+        ],
+        "tdd": [
+            "test driven development"
+        ],
+        "bdd": [
+            "behavior driven development"
+        ],
+        "oop": [
+            "object oriented programming"
+        ],
+        "functional programming": [
+            "fp"
+        ],
+        "algorithms": [
+            "algo"
+        ],
+        "data structures": [
+            "dsa"
+        ],
+        "design patterns": [
+            "gang of four"
+        ],
+        "solid principles": [
+            "solid"
+        ],
+        "dry": [
+            "don't repeat yourself"
+        ],
+        "kiss": [
+            "keep it simple stupid"
+        ],
+        "yagni": [
+            "you aren't gonna need it"
+        ],
+        "security": [
+            "infosec",
+            "cybersecurity",
+            "owasp"
+        ],
+        "rest": [
+            "rest api",
+            "restful"
+        ],
+        "graphql": [],
+        "grpc": [],
+        "soap": [],
+        "microservices": [],
+        "monolith": [
+            "monolithic architecture"
+        ],
+        "serverless": [],
+        "mvc": [
+            "model view controller"
+        ],
+        "mvvm": [
+            "model view viewmodel"
+        ],
+        "event-driven": [
+            "event driven architecture",
+            "eda"
+        ],
+        "domain driven design": [
+            "ddd"
+        ]
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "title": "Search Engines",
+    "description": "Search and analytics engines for indexing and querying large datasets.",
+    "terms": {
+        "elasticsearch": [
+            "elastic",
+            "elk stack",
+            "elk"
+        ],
+        "opensearch": [],
+        "solr": [
+            "apache solr"
+        ],
+        "sphinx": [],
+        "algolia": [],
+        "meilisearch": [],
+        "typesense": []
+    }
+}

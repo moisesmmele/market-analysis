@@ -45,15 +45,15 @@ class TextProcessor:
         return dict(counted)
 
     @staticmethod
-    def count_keywords(text: str, keywords: set[str]) -> dict[str, int]:
-        words: list[str] = text.split()
-        counted: Counter[str] = Counter(words)
-        result: dict[str, int] = {
-            k: counted[k] 
-            for k in keywords 
-            if k in counted
-        }
-        return result
+    def find_matches(source: set[str], words_to_match: dict[set[str]]) -> set[str]:
+        matches: set[str] = set()
+        for canonical, aliases in words_to_match.items():
+            if canonical in source:
+                matches.add(canonical)
+                continue
+            if set(aliases).intersection(source):
+                matches.add(canonical)
+        return matches
 
     @staticmethod
     def remove_stopwords(text: str, stopwords: set[str]) -> str:

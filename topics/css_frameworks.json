@@ -1,0 +1,32 @@
+{
+    "title": "CSS Frameworks",
+    "description": "Styling frameworks and preprocessors for designing modern web layouts.",
+    "terms": {
+        "tailwind": [
+            "tailwindcss"
+        ],
+        "bootstrap": [],
+        "sass": [
+            "scss"
+        ],
+        "less": [],
+        "stylus": [],
+        "material ui": [
+            "mui"
+        ],
+        "chakra ui": [
+            "chakra"
+        ],
+        "ant design": [
+            "antd"
+        ],
+        "bulma": [],
+        "foundation": [
+            "foundation css"
+        ],
+        "mantine": [],
+        "styled-components": [],
+        "emotion": [],
+        "vanilla extract": []
+    }
+}

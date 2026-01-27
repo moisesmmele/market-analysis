@@ -1,0 +1,64 @@
+{
+    "title": "Backend Frameworks",
+    "description": "Server-side web frameworks for building robust and scalable applications.",
+    "terms": {
+        "django": [
+            "django framework"
+        ],
+        "flask": [],
+        "fastapi": [],
+        "springboot": [
+            "spring",
+            "spring boot",
+            "spring framework"
+        ],
+        "aspnet": [
+            "asp.net",
+            "asp.net core"
+        ],
+        "gin": [
+            "gin-gonic"
+        ],
+        "fiber": [
+            "gofiber"
+        ],
+        "echo": [
+            "echo framework"
+        ],
+        "rails": [
+            "ruby on rails",
+            "ror"
+        ],
+        "laravel": [],
+        "symfony": [],
+        "phoenix": [
+            "phoenix framework"
+        ],
+        "express": [
+            "expressjs",
+            "express.js"
+        ],
+        "nestjs": [
+            "nest",
+            "nest.js"
+        ],
+        "fastify": [],
+        "koa": [
+            "koajs"
+        ],
+        "hapi": [
+            "hapijs"
+        ],
+        "rocket": [
+            "rocket.rs"
+        ],
+        "actix": [
+            "actix-web"
+        ],
+        "ktor": [],
+        "play framework": [
+            "play"
+        ],
+        "vapor": []
+    }
+}

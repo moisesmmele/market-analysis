@@ -1,53 +1,82 @@
-from collections import Counter
-
-from database import Database
-from jobspy_normalizer import JobspyNormalizer
 from text_processor import TextProcessor
+from collections import Counter
+from database import Database
 from session import Session
 from config import config
+from topic import Topic
 from typing import Any
-import pandas as pd
 import json
 
 class JobspyProcessor:
-    session: Session = None
-    session_df: pd.DataFrame = None
-    keywords: list[dict[str, set]] = []
-    counted_keywords: dict[str, dict[str, int]] = {}
-    results: list[Any] = []
+    session: Session
+    topics: list[Topic]
+    results: list[dict[str, Any]]
+    linkedin_levels = {
+        "internship": ["internship"],
+        "junior": ["entry level"],
+        "mid-level": ["associate"],
+        "senior": ["mid-senior level"],
+        "executive": ["director", "executive"],
+        "Not Available": ["not applicable"],
+    }
 
     def __init__(self, session: Session) -> None:
         self.session = session
+        self.topics = self.load_topics()
+        self.results = list()
 
     def process(self) -> list[Any]:
-        self.load_keywords()
-        self.extract_df()
-        self.count_keywords(self.description_to_text())
-        self.results.append(self.counted_keywords)
-        self.results.append(self.session_df)
+        self.results = []
+        for topic in self.topics:
+            self.results.append(self.process_topic(topic))
         return self.results
 
-
-    def load_keywords(self):
-        for file in config.keywords.glob("*.json"):
+    @staticmethod
+    def load_topics() -> list[Topic]:
+        topics = list()
+        for file in config.topics.glob("*.json"):
             with open(file, "r", encoding='utf-8') as f:
-                self.keywords.append(json.load(f))
+                topics.append(Topic(**json.load(f)))
+        return topics
 
-    def extract_df(self) -> None:
-        self.session_df: pd.DataFrame = JobspyNormalizer.to_df(self.session.listings)
+    def process_topic(self, topic: Topic) -> dict[str, dict[str, int] | str]:
+        data = {"topic": topic.title, "description": topic.description}
+        total = dict({"listings": 0, "bucket": Counter()})
+        buckets = dict()
 
-    def description_to_text(self) -> str:
-        descriptions = self.session_df["description"]
-        text: str = ""
-        for description in descriptions:
-            text += description + "\n"
-        return text
+        # Generate level buckets
+        for level in self.linkedin_levels:
+            buckets[level] = dict({"listings": 0, "bucket": Counter()})
 
-    def count_keywords(self, text: str) -> None:
-        for keyword_set in self.keywords:
-            keys = keyword_set.keys()
-            for name in keys:
-                keywords = set(keyword_set[name])
-                sanitized = TextProcessor.sanitize(text)
-                counted = TextProcessor.count_keywords(sanitized, keywords)
-                self.counted_keywords[name] = counted
+        # Define which bucket this listing belongs to
+        for listing in self.session.listings:
+            bucket = None
+            for key in self.linkedin_levels.keys():
+                if listing.job_level.lower() in self.linkedin_levels.get(key):
+                    bucket: Counter[any] = buckets[key]["bucket"]
+                    buckets[key]["listings"] += 1
+                    total["listings"] += 1
+                    break
+
+            # Process it
+            description = json.loads(listing.raw_data).get("description")
+            sanitized = TextProcessor.sanitize(description)
+            words = sanitized.split()
+            bigrams = TextProcessor.extract_bigrams(sanitized)
+            words.extend(bigrams)
+            counted_words = TextProcessor.find_matches(set(words), topic.terms)
+
+            # Update buckets
+            if bucket is not None:
+                bucket.update(counted_words)
+            total["bucket"].update(counted_words)
+
+        # Build final json output
+        filtered = dict()
+        for key, value in buckets.items():
+            filtered[key] = {"listings": value["listings"], "counts": dict(value["bucket"])}
+
+        data.update({"total": {"listings": total["listings"], "counts": dict(total["bucket"])}})
+        data.update({"filtered_by_job_level": filtered})
+
+        return data

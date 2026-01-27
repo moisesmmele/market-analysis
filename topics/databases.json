@@ -1,0 +1,61 @@
+{
+    "title": "Databases",
+    "description": "Relational, NoSQL, and in-memory database systems used for data storage and retrieval.",
+    "terms": {
+        "postgresql": [
+            "postgres",
+            "pgsql",
+            "postgre"
+        ],
+        "mysql": [
+            "mysqldb"
+        ],
+        "sqlserver": [
+            "mssql",
+            "microsoft sql server"
+        ],
+        "mariadb": [],
+        "sqlite": [
+            "sqlite3"
+        ],
+        "oracle": [
+            "oracle db",
+            "oracledb"
+        ],
+        "cockroachdb": [
+            "cockroach"
+        ],
+        "cassandra": [
+            "apache cassandra"
+        ],
+        "scylladb": [
+            "scylla"
+        ],
+        "mongodb": [
+            "mongo",
+            "mongod"
+        ],
+        "couchbase": [],
+        "dynamodb": [
+            "dynamo"
+        ],
+        "redis": [
+            "redisdb"
+        ],
+        "memcached": [],
+        "neo4j": [],
+        "clickhouse": [],
+        "rethinkdb": [],
+        "raven_db": [
+            "ravendb"
+        ],
+        "firestore": [
+            "google firestore",
+            "firebase firestore"
+        ],
+        "realm": [
+            "mongodb realm"
+        ],
+        "faunadb": []
+    }
+}

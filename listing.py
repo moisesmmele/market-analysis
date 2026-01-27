@@ -1,5 +1,3 @@
-import json
-from dataclasses import dataclass
 from datetime import datetime
 
 class Listing:
@@ -11,6 +9,3 @@ class Listing:
     title: str
     date_posted: datetime
     raw_data: str
-
-    def __init__(self):
-        pass

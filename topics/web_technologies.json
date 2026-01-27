@@ -1,0 +1,71 @@
+{
+    "title": "Web Technologies",
+    "description": "Core web standards, tools, and libraries essential for modern web development.",
+    "terms": {
+        "html": [
+            "html5",
+            "hypertext markup language"
+        ],
+        "css": [
+            "css3",
+            "cascading style sheets"
+        ],
+        "javascript": [
+            "js",
+            "es6",
+            "ecmascript"
+        ],
+        "typescript": [
+            "ts"
+        ],
+        "jquery": [],
+        "webpack": [],
+        "vite": [],
+        "babel": [],
+        "rollup": [],
+        "parcel": [],
+        "esbuild": [],
+        "ajax": [],
+        "json": [],
+        "xml": [],
+        "dom": [
+            "document object model"
+        ],
+        "pwa": [
+            "progressive web app"
+        ],
+        "spa": [
+            "single page application"
+        ],
+        "accessibility": [
+            "a11y",
+            "web accessibility",
+            "wcag"
+        ],
+        "responsive design": [
+            "rwd",
+            "mobile first"
+        ],
+        "redux": [],
+        "mobx": [],
+        "zustand": [],
+        "recoil": [],
+        "graphql": [
+            "gql"
+        ],
+        "npm": [
+            "node package manager"
+        ],
+        "yarn": [],
+        "pnpm": [],
+        "eslint": [],
+        "prettier": [],
+        "webassembly": [
+            "wasm"
+        ],
+        "webrtc": [],
+        "websocket": [
+            "websockets"
+        ]
+    }
+}

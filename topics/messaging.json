@@ -1,0 +1,44 @@
+{
+    "title": "Messaging & Streaming",
+    "description": "Message brokers, streaming platforms, and queuing systems for asynchronous communication.",
+    "terms": {
+        "kafka": [
+            "apache kafka"
+        ],
+        "rabbitmq": [
+            "rabbit"
+        ],
+        "activemq": [
+            "apache activemq"
+        ],
+        "sqs": [
+            "simple queue service",
+            "aws sqs"
+        ],
+        "sns": [
+            "simple notification service",
+            "aws sns"
+        ],
+        "pulsar": [
+            "apache pulsar"
+        ],
+        "nats": [
+            "nats.io"
+        ],
+        "kinesis": [
+            "aws kinesis"
+        ],
+        "zeromq": [
+            "zmq",
+            "0mq"
+        ],
+        "redpanda": [],
+        "solace": [
+            "pubsub+"
+        ],
+        "ibmmq": [
+            "ibm mq"
+        ],
+        "mqtt": []
+    }
+}

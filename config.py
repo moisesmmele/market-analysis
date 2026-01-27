@@ -1,6 +1,5 @@
 from pathlib import Path
 from types import SimpleNamespace
-import os
 
 # Recursive namespace conversion from config dict
 def to_namespace(d):
@@ -14,7 +13,7 @@ data_dir = Path(base_dir).joinpath("data")
 
 config = to_namespace({
     "data_dir": data_dir,
-    "keywords": base_dir.joinpath("keywords"),
+    "topics": base_dir.joinpath("topics"),
     "database": {
         "file": data_dir.joinpath("database.db"),
         "schema": base_dir.joinpath("schema.sql")

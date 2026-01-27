@@ -1,0 +1,121 @@
+{
+  "title": "Soft Skills",
+  "description": "Interpersonal skills and behavioral traits valued in professional environments.",
+  "terms": {
+    "communication": [
+      "verbal communication",
+      "written communication",
+      "comunicação",
+      "comunicação verbal",
+      "comunicação escrita"
+    ],
+    "teamwork": [
+      "collaboration",
+      "team player",
+      "trabalho em equipe",
+      "colaboração",
+      "espirito de equipe"
+    ],
+    "leadership": [
+      "management",
+      "mentoring",
+      "team lead",
+      "liderança",
+      "gestão",
+      "gestão de pessoas"
+    ],
+    "problem solving": [
+      "troubleshooting",
+      "analytical skills",
+      "resolução de problemas",
+      "solução de problemas"
+    ],
+    "adaptability": [
+      "flexibility",
+      "agility",
+      "adaptabilidade",
+      "flexibilidade",
+      "agilidade"
+    ],
+    "time management": [
+      "prioritization",
+      "organization",
+      "gestão de tempo",
+      "organização",
+      "priorização"
+    ],
+    "empathy": [
+      "emotional intelligence",
+      "eq",
+      "empatia",
+      "inteligência emocional"
+    ],
+    "creativity": [
+      "innovation",
+      "creative thinking",
+      "criatividade",
+      "inovação",
+      "pensamento criativo"
+    ],
+    "critical thinking": [
+      "pensamento crítico",
+      "análise crítica"
+    ],
+    "conflict resolution": [
+      "negotiation",
+      "mediation",
+      "resolução de conflitos",
+      "negociação",
+      "mediação"
+    ],
+    "accountability": [
+      "ownership",
+      "responsibility",
+      "responsabilidade",
+      "senso de dono",
+      "prestação de contas"
+    ],
+    "work ethic": [
+      "dedication",
+      "reliability",
+      "ética de trabalho",
+      "dedicação",
+      "comprometimento"
+    ],
+    "public speaking": [
+      "presentation skills",
+      "oratória",
+      "falar em público",
+      "apresentação"
+    ],
+    "active listening": [
+      "escuta ativa",
+      "ouvir com atenção"
+    ],
+    "mentorship": [
+      "coaching",
+      "training",
+      "mentoria",
+      "treinamento"
+    ],
+    "interpersonal skills": [
+      "social skills",
+      "habilidades interpessoais",
+      "relacionamento interpessoal",
+      "bom relacionamento"
+    ],
+    "curiosity": [
+      "willingness to learn",
+      "continuous learning",
+      "curiosidade",
+      "vontade de aprender",
+      "aprendizado contínuo"
+    ],
+    "resilience": [
+      "grit",
+      "perseverance",
+      "resiliência",
+      "perseverança"
+    ]
+  }
+}

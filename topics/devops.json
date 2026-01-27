@@ -1,0 +1,62 @@
+{
+    "title": "DevOps & Infrastructure",
+    "description": "Tools and practices for containerization, orchestration, CI/CD, and infrastructure management.",
+    "terms": {
+        "docker": [
+            "containerization",
+            "containers"
+        ],
+        "podman": [],
+        "kubernetes": [
+            "k8s",
+            "kube"
+        ],
+        "openshift": [],
+        "helm": [],
+        "terraform": [
+            "tf"
+        ],
+        "ansible": [],
+        "chef": [],
+        "puppet": [],
+        "pulumi": [],
+        "jenkins": [],
+        "gitlab ci": [
+            "gitlab ci/cd"
+        ],
+        "github actions": [
+            "gh actions"
+        ],
+        "circleci": [],
+        "travis ci": [],
+        "teamcity": [],
+        "bamboo": [],
+        "argo cd": [
+            "argocd"
+        ],
+        "prometheus": [],
+        "grafana": [],
+        "elk stack": [],
+        "datadog": [],
+        "new relic": [],
+        "splunk": [],
+        "linux": [
+            "unix",
+            "ubuntu",
+            "centos",
+            "debian",
+            "red hat",
+            "rhel",
+            "alpine"
+        ],
+        "bash": [
+            "shell",
+            "sh",
+            "zsh",
+            "scripting"
+        ],
+        "powershell": [
+            "ps1"
+        ]
+    }
+}

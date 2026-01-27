@@ -1,0 +1,39 @@
+{
+    "title": "Cloud Platforms",
+    "description": "Cloud computing platforms and services for deploying and scaling applications.",
+    "terms": {
+        "aws": [
+            "amazon web services",
+            "amazon"
+        ],
+        "azure": [
+            "microsoft azure",
+            "azure cloud"
+        ],
+        "gcp": [
+            "google cloud platform",
+            "google cloud"
+        ],
+        "oracle cloud": [
+            "oci"
+        ],
+        "alibabacloud": [
+            "aliyun"
+        ],
+        "digitalocean": [],
+        "linode": [
+            "akamai cloud computing"
+        ],
+        "heroku": [],
+        "netlify": [],
+        "vercel": [],
+        "fly.io": [],
+        "railway": [],
+        "serverless": [
+            "lambda",
+            "azure functions",
+            "google cloud functions"
+        ],
+        "openstack": []
+    }
+}

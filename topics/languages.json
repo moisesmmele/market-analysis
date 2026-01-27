@@ -1,0 +1,63 @@
+{
+  "title": "Programming Languages",
+  "description": "Programming languages used for system, web, and application development.",
+  "terms": {
+    "python": [
+      "py",
+      "python3"
+    ],
+    "javascript": [
+      "js",
+      "node"
+    ],
+    "typescript": [
+      "ts"
+    ],
+    "java": [],
+    "csharp": [
+      "c#",
+      ".net"
+    ],
+    "cpp": [
+      "c++",
+      "cpp"
+    ],
+    "c": [
+      "clang"
+    ],
+    "go": [
+      "golang"
+    ],
+    "rust": [
+      "rustlang"
+    ],
+    "php": [],
+    "ruby": [],
+    "swift": [],
+    "kotlin": [],
+    "scala": [],
+    "r": [
+      "r language"
+    ],
+    "dart": [],
+    "lua": [],
+    "perl": [],
+    "haskell": [],
+    "elixir": [],
+    "clojure": [],
+    "bash": [
+      "shell",
+      "sh",
+      "zsh"
+    ],
+    "powershell": [
+      "ps1"
+    ],
+    "sql": [
+      "structured query language"
+    ],
+    "assembly": [
+      "asm"
+    ]
+  }
+}

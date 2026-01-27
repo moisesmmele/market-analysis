@@ -8,6 +8,7 @@ from listing import Listing
 class Session:
     id: int
     title: str
+    description: str = "THIS IS A TEST LOREM IPSUM DOLOR SIT AMET CONSECTETUR ADIPISCING ELIT"
     start_time: datetime
     finish_time: datetime
     listings: List[Listing]
