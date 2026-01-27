@@ -1,45 +1,108 @@
 {
     "title": "DevOps & Infrastructure",
-    "description": "Tools and practices for containerization, orchestration, CI/CD, and infrastructure management.",
+    "description": "Tools and practices for containerization, orchestration, CI/CD, observability, and infrastructure management.",
     "terms": {
         "docker": [
             "containerization",
-            "containers"
+            "containers",
+            "docker compose",
+            "docker swarm"
         ],
         "podman": [],
+        "containerd": [],
         "kubernetes": [
             "k8s",
-            "kube"
+            "kube",
+            "kubectl"
         ],
-        "openshift": [],
-        "helm": [],
+        "openshift": [
+            "okd"
+        ],
+        "rancher": [],
+        "helm": [
+            "helm charts"
+        ],
+        "istio": [
+            "service mesh"
+        ],
+        "linkerd": [],
         "terraform": [
-            "tf"
+            "tf",
+            "opentofu",
+            "hashicorp terraform"
         ],
-        "ansible": [],
-        "chef": [],
+        "ansible": [
+            "ansible playbook"
+        ],
+        "chef": [
+            "chef infra"
+        ],
         "puppet": [],
+        "saltstack": [
+            "salt"
+        ],
         "pulumi": [],
-        "jenkins": [],
+        "vagrant": [],
+        "jenkins": [
+            "jenkins ci"
+        ],
         "gitlab ci": [
-            "gitlab ci/cd"
+            "gitlab ci/cd",
+            "gitlab pipelines"
         ],
         "github actions": [
-            "gh actions"
+            "gh actions",
+            "github workflows"
         ],
         "circleci": [],
         "travis ci": [],
         "teamcity": [],
         "bamboo": [],
-        "argo cd": [
-            "argocd"
+        "azure devops": [
+            "ado",
+            "azure pipelines"
         ],
-        "prometheus": [],
-        "grafana": [],
-        "elk stack": [],
+        "argo cd": [
+            "argocd",
+            "gitops"
+        ],
+        "flux": [
+            "fluxcd"
+        ],
+        "artifactory": [
+            "jfrog",
+            "jfrog artifactory"
+        ],
+        "nexus": [
+            "sonatype nexus",
+            "nexus repository"
+        ],
+        "sonarqube": [
+            "sonar"
+        ],
+        "snyk": [],
+        "vault": [
+            "hashicorp vault",
+            "secrets management"
+        ],
+        "prometheus": [
+            "promql"
+        ],
+        "grafana": [
+            "grafana loki",
+            "grafana tempo"
+        ],
+        "opentelemetry": [
+            "otel"
+        ],
+        "elk stack": [
+            "elasticsearch logstash kibana",
+            "elastic stack"
+        ],
         "datadog": [],
         "new relic": [],
         "splunk": [],
+        "pagerduty": [],
         "linux": [
             "unix",
             "ubuntu",
@@ -47,7 +110,9 @@
             "debian",
             "red hat",
             "rhel",
-            "alpine"
+            "alpine",
+            "arch linux",
+            "fedora"
         ],
         "bash": [
             "shell",
@@ -56,7 +121,14 @@
             "scripting"
         ],
         "powershell": [
-            "ps1"
+            "ps1",
+            "pwsh"
+        ],
+        "nginx": [
+            "nginx ingress"
+        ],
+        "traefik": [
+            "traefik proxy"
         ]
     }
 }

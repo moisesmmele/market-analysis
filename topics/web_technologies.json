@@ -1,10 +1,12 @@
 {
     "title": "Web Technologies",
-    "description": "Core web standards, tools, and libraries essential for modern web development.",
+    "description": "Core standards, build tools, libraries, and concepts for modern web development.",
     "terms": {
         "html": [
             "html5",
-            "hypertext markup language"
+            "hypertext markup language",
+            "semantic html",
+            "html semântico"
         ],
         "css": [
             "css3",
@@ -13,59 +15,156 @@
         "javascript": [
             "js",
             "es6",
-            "ecmascript"
+            "esnext",
+            "ecmascript",
+            "vanilla js"
         ],
         "typescript": [
-            "ts"
+            "ts",
+            "types"
         ],
-        "jquery": [],
-        "webpack": [],
-        "vite": [],
-        "babel": [],
-        "rollup": [],
-        "parcel": [],
-        "esbuild": [],
-        "ajax": [],
-        "json": [],
-        "xml": [],
+        "webassembly": [
+            "wasm"
+        ],
         "dom": [
-            "document object model"
+            "document object model",
+            "virtual dom",
+            "shadow dom"
         ],
-        "pwa": [
-            "progressive web app"
-        ],
-        "spa": [
-            "single page application"
-        ],
-        "accessibility": [
-            "a11y",
-            "web accessibility",
-            "wcag"
-        ],
-        "responsive design": [
-            "rwd",
-            "mobile first"
-        ],
-        "redux": [],
-        "mobx": [],
-        "zustand": [],
-        "recoil": [],
-        "graphql": [
-            "gql"
+        "web components": [
+            "custom elements",
+            "html templates"
         ],
         "npm": [
             "node package manager"
         ],
         "yarn": [],
         "pnpm": [],
-        "eslint": [],
-        "prettier": [],
-        "webassembly": [
-            "wasm"
+        "bun": [
+            "bun.sh"
+        ],
+        "webpack": [],
+        "vite": [
+            "vitest"
+        ],
+        "turbopack": [],
+        "babel": [],
+        "rollup": [],
+        "esbuild": [],
+        "parcel": [],
+        "eslint": [
+            "linting",
+            "linter"
+        ],
+        "prettier": [
+            "formatter"
+        ],
+        "biome": [
+            "biomejs"
+        ],
+        "ajax": [
+            "xhr",
+            "xmlhttprequest"
+        ],
+        "fetch api": [
+            "fetch"
+        ],
+        "axios": [],
+        "tanstack query": [
+            "react query",
+            "vue query",
+            "solid query"
+        ],
+        "swr": [],
+        "redux": [
+            "redux toolkit",
+            "rtk"
+        ],
+        "mobx": [],
+        "zustand": [],
+        "recoil": [],
+        "pinia": [],
+        "xstate": [],
+        "zod": [
+            "zod schema"
+        ],
+        "yup": [],
+        "graphql": [
+            "gql",
+            "apollo"
+        ],
+        "trpc": [],
+        "json": [
+            "javascript object notation"
+        ],
+        "xml": [],
+        "websocket": [
+            "websockets",
+            "ws"
         ],
         "webrtc": [],
-        "websocket": [
-            "websockets"
+        "socket.io": [],
+        "pwa": [
+            "progressive web app",
+            "service workers",
+            "manifest.json"
+        ],
+        "spa": [
+            "single page application",
+            "client side rendering",
+            "csr"
+        ],
+        "ssr": [
+            "server side rendering",
+            "hydration"
+        ],
+        "ssg": [
+            "static site generation"
+        ],
+        "accessibility": [
+            "a11y",
+            "web accessibility",
+            "wcag",
+            "aria",
+            "acessibilidade"
+        ],
+        "responsive design": [
+            "rwd",
+            "mobile first",
+            "responsividade",
+            "design responsivo"
+        ],
+        "seo": [
+            "search engine optimization",
+            "otimização para motores de busca"
+        ],
+        "core web vitals": [
+            "lcp",
+            "fid",
+            "cls",
+            "lighthouse"
+        ],
+        "cors": [
+            "cross-origin resource sharing"
+        ],
+        "csp": [
+            "content security policy"
+        ],
+        "https": [
+            "ssl",
+            "tls"
+        ],
+        "cookies": [
+            "http cookies"
+        ],
+        "localstorage": [
+            "local storage",
+            "sessionstorage",
+            "indexeddb"
+        ],
+        "webgl": [
+            "three.js",
+            "webgpu"
         ]
     }
 }

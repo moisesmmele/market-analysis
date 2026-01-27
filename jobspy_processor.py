@@ -1,6 +1,5 @@
 from text_processor import TextProcessor
 from collections import Counter
-from database import Database
 from session import Session
 from config import config
 from topic import Topic
@@ -20,24 +19,18 @@ class JobspyProcessor:
         "Not Available": ["not applicable"],
     }
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, topics: list[Topic]) -> None:
         self.session = session
-        self.topics = self.load_topics()
+        self.topics = topics
         self.results = list()
 
     def process(self) -> list[Any]:
         self.results = []
         for topic in self.topics:
             self.results.append(self.process_topic(topic))
+        with open(config.data_dir.joinpath("debug_dump.json"), "w", encoding='utf-8') as f:
+            f.write(json.dumps(self.results, indent=2))
         return self.results
-
-    @staticmethod
-    def load_topics() -> list[Topic]:
-        topics = list()
-        for file in config.topics.glob("*.json"):
-            with open(file, "r", encoding='utf-8') as f:
-                topics.append(Topic(**json.load(f)))
-        return topics
 
     def process_topic(self, topic: Topic) -> dict[str, dict[str, int] | str]:
         data = {"topic": topic.title, "description": topic.description}
@@ -71,12 +64,17 @@ class JobspyProcessor:
                 bucket.update(counted_words)
             total["bucket"].update(counted_words)
 
-        # Build final json output
+        # Build final output
         filtered = dict()
         for key, value in buckets.items():
-            filtered[key] = {"listings": value["listings"], "counts": dict(value["bucket"])}
+            filtered[key] = {"listings": value["listings"], "matched": len(value["bucket"]),"counts": dict(value["bucket"])}
 
-        data.update({"total": {"listings": total["listings"], "counts": dict(total["bucket"])}})
+        count_per_level = dict()
+        for key, value in filtered.items():
+            count_per_level[key] = value["listings"]
+
+
+        data.update({"total": {"listings": total["listings"], "per_level": dict(count_per_level), "matched": len(total["bucket"]), "counts": dict(total["bucket"])}})
         data.update({"filtered_by_job_level": filtered})
 
         return data

@@ -1,121 +1,202 @@
 {
-  "title": "Soft Skills",
-  "description": "Interpersonal skills and behavioral traits valued in professional environments.",
-  "terms": {
-    "communication": [
-      "verbal communication",
-      "written communication",
-      "comunicação",
-      "comunicação verbal",
-      "comunicação escrita"
-    ],
-    "teamwork": [
-      "collaboration",
-      "team player",
-      "trabalho em equipe",
-      "colaboração",
-      "espirito de equipe"
-    ],
-    "leadership": [
-      "management",
-      "mentoring",
-      "team lead",
-      "liderança",
-      "gestão",
-      "gestão de pessoas"
-    ],
-    "problem solving": [
-      "troubleshooting",
-      "analytical skills",
-      "resolução de problemas",
-      "solução de problemas"
-    ],
-    "adaptability": [
-      "flexibility",
-      "agility",
-      "adaptabilidade",
-      "flexibilidade",
-      "agilidade"
-    ],
-    "time management": [
-      "prioritization",
-      "organization",
-      "gestão de tempo",
-      "organização",
-      "priorização"
-    ],
-    "empathy": [
-      "emotional intelligence",
-      "eq",
-      "empatia",
-      "inteligência emocional"
-    ],
-    "creativity": [
-      "innovation",
-      "creative thinking",
-      "criatividade",
-      "inovação",
-      "pensamento criativo"
-    ],
-    "critical thinking": [
-      "pensamento crítico",
-      "análise crítica"
-    ],
-    "conflict resolution": [
-      "negotiation",
-      "mediation",
-      "resolução de conflitos",
-      "negociação",
-      "mediação"
-    ],
-    "accountability": [
-      "ownership",
-      "responsibility",
-      "responsabilidade",
-      "senso de dono",
-      "prestação de contas"
-    ],
-    "work ethic": [
-      "dedication",
-      "reliability",
-      "ética de trabalho",
-      "dedicação",
-      "comprometimento"
-    ],
-    "public speaking": [
-      "presentation skills",
-      "oratória",
-      "falar em público",
-      "apresentação"
-    ],
-    "active listening": [
-      "escuta ativa",
-      "ouvir com atenção"
-    ],
-    "mentorship": [
-      "coaching",
-      "training",
-      "mentoria",
-      "treinamento"
-    ],
-    "interpersonal skills": [
-      "social skills",
-      "habilidades interpessoais",
-      "relacionamento interpessoal",
-      "bom relacionamento"
-    ],
-    "curiosity": [
-      "willingness to learn",
-      "continuous learning",
-      "curiosidade",
-      "vontade de aprender",
-      "aprendizado contínuo"
-    ],
-    "resilience": [
-      "grit",
-      "perseverance",
-      "resiliência",
-      "perseverança"
-    ]
-  }
+    "title": "Soft Skills",
+    "description": "Interpersonal skills, behavioral traits, and professional competencies.",
+    "terms": {
+        "communication": [
+            "verbal communication",
+            "written communication",
+            "storytelling",
+            "comunicação",
+            "comunicação verbal",
+            "comunicação escrita",
+            "boa comunicação",
+            "clareza"
+        ],
+        "teamwork": [
+            "collaboration",
+            "team player",
+            "cross-functional",
+            "trabalho em equipe",
+            "colaboração",
+            "espirito de equipe",
+            "trabalho colaborativo",
+            "bom relacionamento"
+        ],
+        "leadership": [
+            "management",
+            "mentoring",
+            "team lead",
+            "delegation",
+            "liderança",
+            "gestão",
+            "gestão de pessoas",
+            "liderança técnica",
+            "delegação"
+        ],
+        "problem solving": [
+            "troubleshooting",
+            "analytical skills",
+            "decision making",
+            "resolução de problemas",
+            "solução de problemas",
+            "capacidade analítica",
+            "tomada de decisão"
+        ],
+        "adaptability": [
+            "flexibility",
+            "agility",
+            "adaptabilidade",
+            "flexibilidade",
+            "agilidade",
+            "adaptação a mudanças"
+        ],
+        "time management": [
+            "prioritization",
+            "organization",
+            "planning",
+            "gestão de tempo",
+            "organização",
+            "priorização",
+            "planejamento",
+            "cumprimento de prazos"
+        ],
+        "empathy": [
+            "emotional intelligence",
+            "eq",
+            "rapport",
+            "empatia",
+            "inteligência emocional",
+            "sensibilidade"
+        ],
+        "creativity": [
+            "innovation",
+            "creative thinking",
+            "out of the box",
+            "criatividade",
+            "inovação",
+            "pensamento criativo",
+            "pensar fora da caixa"
+        ],
+        "critical thinking": [
+            "strategic thinking",
+            "pensamento crítico",
+            "análise crítica",
+            "visão crítica"
+        ],
+        "conflict resolution": [
+            "negotiation",
+            "mediation",
+            "diplomacy",
+            "resolução de conflitos",
+            "negociação",
+            "mediação",
+            "diplomacia",
+            "gestão de conflitos"
+        ],
+        "accountability": [
+            "ownership",
+            "responsibility",
+            "responsabilidade",
+            "senso de dono",
+            "prestação de contas",
+            "protagonismo",
+            "comprometimento"
+        ],
+        "proactivity": [
+            "initiative",
+            "self-starter",
+            "proatividade",
+            "iniciativa",
+            "autonomia",
+            "autogerenciamento"
+        ],
+        "work ethic": [
+            "dedication",
+            "reliability",
+            "punctuality",
+            "ética de trabalho",
+            "dedicação",
+            "pontualidade",
+            "confiabilidade"
+        ],
+        "public speaking": [
+            "presentation skills",
+            "oratória",
+            "falar em público",
+            "apresentação",
+            "comunicação em público"
+        ],
+        "active listening": [
+            "listening skills",
+            "escuta ativa",
+            "ouvir com atenção",
+            "saber ouvir"
+        ],
+        "mentorship": [
+            "coaching",
+            "training",
+            "knowledge sharing",
+            "mentoria",
+            "treinamento",
+            "compartilhamento de conhecimento",
+            "ensinar"
+        ],
+        "interpersonal skills": [
+            "social skills",
+            "networking",
+            "habilidades interpessoais",
+            "relacionamento interpessoal",
+            "sociabilidade"
+        ],
+        "curiosity": [
+            "willingness to learn",
+            "continuous learning",
+            "growth mindset",
+            "lifelong learning",
+            "curiosidade",
+            "vontade de aprender",
+            "aprendizado contínuo",
+            "mentalidade de crescimento"
+        ],
+        "resilience": [
+            "grit",
+            "perseverance",
+            "handling pressure",
+            "resiliência",
+            "perseverança",
+            "trabalho sob pressão",
+            "inteligência emocional"
+        ],
+        "customer focus": [
+            "customer centric",
+            "user centric",
+            "foco no cliente",
+            "orientação ao cliente",
+            "foco no usuário",
+            "sucesso do cliente"
+        ],
+        "strategic vision": [
+            "business acumen",
+            "big picture",
+            "visão de negócio",
+            "visão sistêmica",
+            "visão estratégica",
+            "entendimento do negócio"
+        ],
+        "attention to detail": [
+            "precision",
+            "accuracy",
+            "atenção aos detalhes",
+            "detalhista",
+            "minucioso",
+            "rigor"
+        ],
+        "feedback": [
+            "receiving feedback",
+            "constructive feedback",
+            "dar e receber feedback",
+            "feedback construtivo",
+            "aberto a feedback"
+        ]
+    }
 }

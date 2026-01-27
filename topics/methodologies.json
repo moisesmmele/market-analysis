@@ -1,13 +1,14 @@
 {
     "title": "Methodologies & Concepts",
-    "description": "Software development methodologies, architectural concepts, and engineering best practices.",
+    "description": "Software development methodologies, architectural patterns, and engineering principles.",
     "terms": {
         "agile": [
             "agile methodology"
         ],
-        "scrum": [],
+        "scrum": [
+            "scrum framework"
+        ],
         "kanban": [],
-        "waterfall": [],
         "lean": [
             "lean software development"
         ],
@@ -20,16 +21,31 @@
         "cicd": [
             "ci/cd",
             "continuous integration",
-            "continuous deployment"
+            "continuous deployment",
+            "pipelines"
         ],
         "devops": [],
+        "devsecops": [],
+        "sre": [
+            "site reliability engineering"
+        ],
+        "platform engineering": [
+            "idp",
+            "internal developer platform"
+        ],
+        "iac": [
+            "infrastructure as code"
+        ],
+        "gitops": [],
         "testing": [
             "qa",
             "quality assurance",
             "unit testing",
             "integration testing",
-            "e2e testing"
+            "e2e testing",
+            "performance testing"
         ],
+        "chaos engineering": [],
         "tdd": [
             "test driven development"
         ],
@@ -42,14 +58,29 @@
         "functional programming": [
             "fp"
         ],
+        "reactive programming": [
+            "rx",
+            "reactive streams"
+        ],
         "algorithms": [
             "algo"
         ],
         "data structures": [
             "dsa"
         ],
+        "system design": [
+            "systems design"
+        ],
         "design patterns": [
-            "gang of four"
+            "gang of four",
+            "gof"
+        ],
+        "distributed systems": [],
+        "cap theorem": [
+            "consistency availability partition tolerance"
+        ],
+        "acid": [
+            "atomicity consistency isolation durability"
         ],
         "solid principles": [
             "solid"
@@ -63,35 +94,73 @@
         "yagni": [
             "you aren't gonna need it"
         ],
+        "twelve-factor": [
+            "12 factor app",
+            "12-factor"
+        ],
         "security": [
             "infosec",
             "cybersecurity",
-            "owasp"
+            "owasp top 10",
+            "zero trust"
+        ],
+        "oauth": [
+            "oauth2",
+            "oidc",
+            "openid connect"
+        ],
+        "jwt": [
+            "json web token"
         ],
         "rest": [
             "rest api",
             "restful"
         ],
         "graphql": [],
-        "grpc": [],
-        "soap": [],
-        "microservices": [],
-        "monolith": [
-            "monolithic architecture"
+        "grpc": [
+            "protobuf"
         ],
-        "serverless": [],
+        "websockets": [
+            "socket.io"
+        ],
+        "webhooks": [],
+        "soap": [],
+        "microservices": [
+            "distributed architecture"
+        ],
+        "monolith": [
+            "monolithic architecture",
+            "modular monolith"
+        ],
+        "serverless": [
+            "faas"
+        ],
         "mvc": [
             "model view controller"
         ],
         "mvvm": [
             "model view viewmodel"
         ],
+        "clean architecture": [
+            "onion architecture"
+        ],
+        "hexagonal architecture": [
+            "ports and adapters"
+        ],
+        "cqrs": [
+            "command query responsibility segregation"
+        ],
+        "event sourcing": [],
         "event-driven": [
             "event driven architecture",
             "eda"
         ],
         "domain driven design": [
-            "ddd"
+            "ddd",
+            "bounded contexts"
+        ],
+        "bff": [
+            "backend for frontend"
         ]
     }
 }

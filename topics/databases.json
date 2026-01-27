@@ -1,6 +1,6 @@
 {
     "title": "Databases",
-    "description": "Relational, NoSQL, and in-memory database systems used for data storage and retrieval.",
+    "description": "Relational, NoSQL, vector, and in-memory database systems for operational and analytical workloads.",
     "terms": {
         "postgresql": [
             "postgres",
@@ -12,7 +12,8 @@
         ],
         "sqlserver": [
             "mssql",
-            "microsoft sql server"
+            "microsoft sql server",
+            "t-sql"
         ],
         "mariadb": [],
         "sqlite": [
@@ -24,6 +25,12 @@
         ],
         "cockroachdb": [
             "cockroach"
+        ],
+        "tidb": [
+            "pingcap"
+        ],
+        "yugabytedb": [
+            "yugabyte"
         ],
         "cassandra": [
             "apache cassandra"
@@ -37,14 +44,51 @@
         ],
         "couchbase": [],
         "dynamodb": [
-            "dynamo"
+            "dynamo",
+            "aws dynamo"
+        ],
+        "cosmosdb": [
+            "azure cosmos",
+            "azure cosmos db"
         ],
         "redis": [
-            "redisdb"
+            "redisdb",
+            "redis stack"
         ],
         "memcached": [],
-        "neo4j": [],
-        "clickhouse": [],
+        "dragonfly": [
+            "dragonflydb"
+        ],
+        "neo4j": [
+            "neo4j graph"
+        ],
+        "arangodb": [],
+        "amazon neptune": [
+            "aws neptune"
+        ],
+        "clickhouse": [
+            "clickhouse db"
+        ],
+        "snowflake": [
+            "snowflake db"
+        ],
+        "duckdb": [],
+        "bigquery": [
+            "google bigquery"
+        ],
+        "redshift": [
+            "aws redshift"
+        ],
+        "elasticsearch": [
+            "elastic search",
+            "elk stack",
+            "opensearch"
+        ],
+        "solr": [
+            "apache solr"
+        ],
+        "algolia": [],
+        "meilisearch": [],
         "rethinkdb": [],
         "raven_db": [
             "ravendb"
@@ -56,6 +100,26 @@
         "realm": [
             "mongodb realm"
         ],
-        "faunadb": []
+        "faunadb": [
+            "fauna"
+        ],
+        "influxdb": [
+            "influx data"
+        ],
+        "prometheus": [
+            "prometheus db"
+        ],
+        "timescaledb": [
+            "timescale"
+        ],
+        "pinecone": [
+            "pinecone vector"
+        ],
+        "weaviate": [],
+        "milvus": [],
+        "chromadb": [
+            "chroma"
+        ],
+        "qdrant": []
     }
 }

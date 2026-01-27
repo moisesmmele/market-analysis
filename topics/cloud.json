@@ -4,33 +4,83 @@
     "terms": {
         "aws": [
             "amazon web services",
-            "amazon"
+            "amazon",
+            "aws cloud"
         ],
         "azure": [
             "microsoft azure",
-            "azure cloud"
+            "azure cloud",
+            "ms azure"
         ],
         "gcp": [
             "google cloud platform",
             "google cloud"
         ],
         "oracle cloud": [
-            "oci"
+            "oci",
+            "oracle cloud infrastructure"
+        ],
+        "ibm cloud": [
+            "ibm bluemix"
         ],
         "alibabacloud": [
-            "aliyun"
+            "aliyun",
+            "alibaba cloud"
         ],
-        "digitalocean": [],
+        "tencent cloud": [
+            "tencent"
+        ],
+        "cloudflare": [
+            "cloudflare workers",
+            "cloudflare pages"
+        ],
+        "digitalocean": [
+            "digital ocean"
+        ],
         "linode": [
-            "akamai cloud computing"
+            "akamai cloud computing",
+            "akamai"
         ],
-        "heroku": [],
-        "netlify": [],
-        "vercel": [],
-        "fly.io": [],
-        "railway": [],
+        "vultr": [],
+        "hetzner": [
+            "hetzner cloud",
+            "hetzner online"
+        ],
+        "ovhcloud": [
+            "ovh"
+        ],
+        "heroku": [
+            "salesforce heroku"
+        ],
+        "render": [
+            "render.com"
+        ],
+        "netlify": [
+            "netlify cloud"
+        ],
+        "vercel": [
+            "zeit"
+        ],
+        "fly.io": [
+            "fly.io cloud"
+        ],
+        "railway": [
+            "railway.app"
+        ],
+        "firebase": [
+            "google firebase",
+            "firebase hosting"
+        ],
+        "supabase": [
+            "supabase cloud"
+        ],
+        "openshift": [
+            "red hat openshift",
+            "redhat openshift"
+        ],
         "serverless": [
             "lambda",
+            "aws lambda",
             "azure functions",
             "google cloud functions"
         ],

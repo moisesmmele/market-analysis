@@ -1,4 +1,5 @@
 from jobspy_processor import JobspyProcessor
+from topic_loader import TopicLoader
 from streamlit import session_state
 from database import Database
 import streamlit as st
@@ -7,18 +8,50 @@ import altair as alt
 from session import Session
 
 db = Database()
+topic_loader = TopicLoader()
 
 import pandas as pd
 
-def make_chart(counts: dict, limit: int = 30):
+def make_chart(counts: dict, total_listings: int, limit: int = 30):
     data = pd.DataFrame(list(counts.items()), columns=["keyword", "count"])
-    data = data.sort_values("count", ascending=False).head(limit)
     
-    return alt.Chart(data).mark_bar().encode(
-        x=alt.X("keyword", sort="-y", axis=alt.Axis(labelAngle=-45, title=None)),
-        y=alt.Y("count", title="Count"),
-        tooltip=["keyword", "count"]
-    ).interactive()
+    if total_listings > 0:
+        data["percentage"] = (data["count"] / total_listings * 100).round(1)
+    else:
+        data["percentage"] = 0.0
+        
+    data = data.sort_values("count", ascending=False).head(limit)
+    data["label"] = data["percentage"].map('{:.1f}%'.format)
+    
+    # Create base chart with common elements
+    base = alt.Chart(data).encode(
+        x=alt.X("keyword", sort=None, axis=alt.Axis(labelAngle=-45, title=None)),
+        tooltip=[
+            alt.Tooltip("keyword", title="Keyword"),
+            alt.Tooltip("count", title="Count"),
+            alt.Tooltip("percentage", title="Percentage (%)", format=".1f")
+        ]
+    )
+
+    # Calculate max percentage for Y-axis domain
+    max_val = data["percentage"].max()
+    
+    # Global Percentage Bars
+    bars = base.mark_bar().encode(
+        y=alt.Y("percentage", title="Percentage (%)", scale=alt.Scale(domain=[0, max_val + 5]))
+    )
+
+    # Percentage Labels
+    chart = bars
+    max_bars_for_labels = 25
+    if len(data) <= max_bars_for_labels:
+        text = base.mark_text(dy=-10, fontSize=16, color='gray', fontWeight='bold').encode(
+            y=alt.Y("percentage"),
+            text=alt.Text("label")
+        )
+        chart = bars + text
+
+    return chart.interactive()
 
 def render_dashboard(results, limit: int = 30):
     for item in results:
@@ -30,40 +63,67 @@ def render_dashboard(results, limit: int = 30):
             if description:
                 st.caption(description)
             
-            tab_overview, tab_levels = st.tabs(["Overview", "By Job Level"])
+            # Prepare data and tabs
+            levels_data = item.get("filtered_by_job_level", {})
+            level_names = list(levels_data.keys())
             
-            with tab_overview:
-                total_counts = item.get("total", {}).get("counts", {})
+            # Create tabs: first is Overview, then one for each level
+            tab_names = ["Overview"] + level_names
+            tabs = st.tabs(tab_names)
+            
+            # Tab 0: Overview
+            with tabs[0]:
+                total_data = item.get("total", {})
+                total_counts = total_data.get("counts", {})
+                total_listings = total_data.get("listings", 0)
+                total_matched = total_data.get("matched", 0)
+                
                 if total_counts:
-                    st.altair_chart(make_chart(total_counts, limit), use_container_width=True)
-                    st.markdown(f"**Total Listings:** {item.get('total', {}).get('listings', 0)}")
+                    st.altair_chart(make_chart(total_counts, total_listings, limit), use_container_width=True)
+                    
+                    per_level = total_data.get("per_level", {})
+                    
+                    # Columns: Total Listings + (each level in per_level) + Matched
+                    main_cols = st.columns([1, 2])
+                    
+                    # 1. General Column
+                    with main_cols[0]:
+                        st.markdown("**General Metrics**")
+                        # Using 2 columns for Total and Matched
+                        gen_cols = st.columns(2)
+                        gen_cols[0].metric("Total", total_listings)
+                        gen_cols[1].metric("Matched Keywords", total_matched)
+                    
+                    # 2. Distribution Column
+                    with main_cols[1]:
+                        st.markdown("**Distribution by Level**")
+                        # Dynamic columns for each level
+                        if per_level:
+                            dist_cols = st.columns(len(per_level))
+                            for i, (level, count) in enumerate(per_level.items()):
+                                pct = (count / total_listings * 100) if total_listings > 0 else 0.0
+                                dist_cols[i].metric(level.title(), f"{pct:.1f}%", delta_color="off")
+                        else:
+                            st.caption("No level distribution available")
                 else:
                     st.info("No data available for this topic.")
             
-            with tab_levels:
-                levels_data = item.get("filtered_by_job_level", {})
-                if levels_data:
-                    # Use a unique key for each widget to avoid conflicts
-                    selected_level = st.radio(
-                        "Select Job Level", 
-                        options=list(levels_data.keys()), 
-                        horizontal=True,
-                        key=f"radio_{topic}",
-                        label_visibility="collapsed"
-                    )
+            # Remaining tabs: Job Levels
+            for i, level_name in enumerate(level_names):
+                with tabs[i + 1]:
+                    level_info = levels_data[level_name]
+                    counts = level_info.get("counts", {})
+                    listings_count = level_info.get("listings", 0)
+                    matched_count = level_info.get("matched", 0)
                     
-                    if selected_level:
-                        level_info = levels_data[selected_level]
-                        counts = level_info.get("counts", {})
-                        listings_count = level_info.get("listings", 0)
+                    if counts:
+                        st.altair_chart(make_chart(counts, listings_count, limit), use_container_width=True)
                         
-                        if counts:
-                            st.altair_chart(make_chart(counts, limit), use_container_width=True)
-                            st.markdown(f"**Listings at this level:** {listings_count}")
-                        else:
-                            st.warning(f"No keywords found for {selected_level} level.")
-                else:
-                    st.info("No job level data available.")
+                        c1, c2 = st.columns(2)
+                        c1.metric("Listings at this level", listings_count)
+                        c2.metric("Matched Keywords", matched_count)
+                    else:
+                        st.warning(f"No keywords found for {level_name} level.")
             
             st.divider()
 
@@ -73,7 +133,6 @@ st.space()
 
 # --- Sidebar: Session Selection ---
 with st.sidebar:
-    st.header("📂 Sessions")
     index: dict[int, str] = db.get_index()
     
     if not index:
@@ -84,24 +143,45 @@ with st.sidebar:
     default_index = list(index.keys()).index(current_id) if current_id in index else 0
 
     selected_session: int = st.selectbox(
-        "Select Session",
+        label="Sessions available",
         options=index.keys(),
         format_func=lambda option_id: f"{option_id}. {index[option_id]}",
         index=default_index
     )
 
+    available_topics = sorted(list(topic_loader.get_available()))
+    selected_topic_titles = []
+    
+    st.text("\n\n")
+    with st.expander(label="Topics available", expanded=False):
+        for topic in available_topics:
+            if st.checkbox(topic, value=True, key=f"topic_{topic}"):
+                selected_topic_titles.append(topic)
+
+    st.text("\n")
+    top_n = st.number_input(label="Top Keywords to Display", min_value=5, max_value=100, value=30, step=1)
+
     if st.button("Load Session", type="primary"):
         session = db.get_session(selected_session)
         st.session_state['current_session'] = session
+        st.session_state['topics'] = topic_loader.load(set(selected_topic_titles))
         st.rerun()
     
     st.divider()
-    st.header("⚙️ Settings")
-    top_n = st.number_input("Top Keywords to Display", min_value=5, max_value=100, value=30, step=5)
+    st.markdown("""
+    ### ℹ️ About this Dashboard
+    This tool visualizes job market data scraped from various sources.
+    
+    **How to use:**
+    1. **Select a Session:** Choose a dataset from the dropdown above.
+    2. **Load Data:** Click 'Load Session' to visualize the metrics.
+    3. **Explore:** View top keywords, filter by job levels, and analyze trends.
+    """)
 
 if 'current_session' in st.session_state:
     session = st.session_state['current_session']
-    processor = JobspyProcessor(session)
+    topics = st.session_state.get('topics', [])
+    processor = JobspyProcessor(session, topics)
     results = processor.process()
 
     with st.container():
@@ -124,5 +204,5 @@ if 'current_session' in st.session_state:
         st.info("No analysis results generated.")
 
 else:
-    st.info("👈 Please select a session from the sidebar to view results.")
+    st.info("👈 Please select a session and the desired topics from the sidebar to view results.")
     st.stop()

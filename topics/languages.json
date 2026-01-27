@@ -1,63 +1,135 @@
 {
   "title": "Programming Languages",
-  "description": "Programming languages used for system, web, and application development.",
+  "description": "Programming languages used for system, web, mobile, and application development.",
   "terms": {
     "python": [
       "py",
-      "python3"
+      "python3",
+      "python scripting"
     ],
     "javascript": [
       "js",
-      "node"
+      "node",
+      "node.js",
+      "vanilla js",
+      "ecmascript",
+      "es6"
     ],
     "typescript": [
       "ts"
     ],
-    "java": [],
+    "java": [
+      "jvm",
+      "java se",
+      "java ee"
+    ],
     "csharp": [
       "c#",
-      ".net"
+      ".net",
+      "c-sharp",
+      "dotnet"
     ],
     "cpp": [
       "c++",
-      "cpp"
+      "c plus plus",
+      "cpp17",
+      "cpp20"
     ],
     "c": [
-      "clang"
+      "clang",
+      "c lang"
     ],
     "go": [
-      "golang"
+      "golang",
+      "go language"
     ],
     "rust": [
-      "rustlang"
+      "rustlang",
+      "rust-lang"
     ],
-    "php": [],
-    "ruby": [],
-    "swift": [],
-    "kotlin": [],
-    "scala": [],
-    "r": [
-      "r language"
+    "zig": [
+      "ziglang"
     ],
-    "dart": [],
+    "php": [
+      "php7",
+      "php8"
+    ],
+    "ruby": [
+      "mri"
+    ],
+    "swift": [
+      "swift ios"
+    ],
+    "objective-c": [
+      "objc",
+      "obj-c"
+    ],
+    "kotlin": [
+      "kotlin android"
+    ],
+    "scala": [
+      "scala lang"
+    ],
+    "groovy": [
+      "apache groovy",
+      "jenkinsfile"
+    ],
+    "julia": [
+      "julialang"
+    ],
+    "matlab": [],
+    "dart": [
+      "dart lang"
+    ],
     "lua": [],
-    "perl": [],
-    "haskell": [],
+    "perl": [
+      "perl5",
+      "perl6",
+      "raku"
+    ],
+    "haskell": [
+      "ghc"
+    ],
     "elixir": [],
-    "clojure": [],
+    "erlang": [
+      "otp"
+    ],
+    "clojure": [
+      "clj"
+    ],
+    "fsharp": [
+      "f#",
+      "f sharp"
+    ],
+    "ocaml": [],
+    "solidity": [
+      "solidity blockchain",
+      "smart contracts"
+    ],
     "bash": [
       "shell",
       "sh",
-      "zsh"
+      "zsh",
+      "shell scripting"
     ],
     "powershell": [
-      "ps1"
+      "ps1",
+      "pwsh"
     ],
+    "visual basic": [
+      "vba",
+      "vb.net",
+      "vb6"
+    ],
+    "fortran": [],
+    "cobol": [],
     "sql": [
       "structured query language"
     ],
     "assembly": [
-      "asm"
+      "asm",
+      "nasm",
+      "x86"
     ]
   }
 }

@@ -3,36 +3,81 @@
     "description": "Server-side web frameworks for building robust and scalable applications.",
     "terms": {
         "django": [
-            "django framework"
+            "django framework",
+            "django python"
         ],
-        "flask": [],
-        "fastapi": [],
+        "flask": [
+            "flask python",
+            "flask framework"
+        ],
+        "fastapi": [
+            "fast api",
+            "fastapi python"
+        ],
+        "sanic": [
+            "sanic framework"
+        ],
+        "tornado": [
+            "tornadoweb"
+        ],
         "springboot": [
             "spring",
             "spring boot",
             "spring framework"
         ],
+        "quarkus": [
+            "quarkus.io"
+        ],
+        "micronaut": [
+            "micronaut framework"
+        ],
+        "javalin": [],
         "aspnet": [
             "asp.net",
-            "asp.net core"
+            "asp.net core",
+            "dotnet core",
+            ".net core"
         ],
         "gin": [
-            "gin-gonic"
+            "gin-gonic",
+            "gin framework"
         ],
         "fiber": [
             "gofiber"
         ],
         "echo": [
-            "echo framework"
+            "echo framework",
+            "echo golang"
+        ],
+        "chi": [
+            "go-chi",
+            "go chi"
         ],
         "rails": [
             "ruby on rails",
-            "ror"
+            "ror",
+            "rails framework"
         ],
-        "laravel": [],
-        "symfony": [],
+        "sinatra": [
+            "sinatra rb",
+            "sinatra ruby"
+        ],
+        "hanami": [],
+        "laravel": [
+            "laravel framework"
+        ],
+        "symfony": [
+            "symfony framework"
+        ],
+        "slim": [
+            "slim php",
+            "slim framework"
+        ],
+        "codeigniter": [],
+        "cakephp": [],
         "phoenix": [
-            "phoenix framework"
+            "phoenix framework",
+            "phoenix elixir"
         ],
         "express": [
             "expressjs",
@@ -40,25 +85,58 @@
         ],
         "nestjs": [
             "nest",
-            "nest.js"
+            "nest.js",
+            "nestjs framework"
         ],
-        "fastify": [],
+        "fastify": [
+            "fastifyjs"
+        ],
         "koa": [
             "koajs"
         ],
         "hapi": [
             "hapijs"
         ],
+        "adonis": [
+            "adonisjs",
+            "adonis.js",
+            "adonis framework"
+        ],
+        "hono": [
+            "honojs",
+            "hono.js"
+        ],
+        "loopback": [
+            "loopback.io"
+        ],
         "rocket": [
-            "rocket.rs"
+            "rocket.rs",
+            "rocket rust"
         ],
         "actix": [
-            "actix-web"
+            "actix-web",
+            "actix rust"
         ],
-        "ktor": [],
+        "axum": [
+            "axum-rs",
+            "axum framework"
+        ],
+        "ktor": [
+            "ktor framework"
+        ],
         "play framework": [
-            "play"
+            "play",
+            "play framework java",
+            "play framework scala"
         ],
-        "vapor": []
+        "vapor": [
+            "vapor swift"
+        ],
+        "elysia": [
+            "elysiajs"
+        ],
+        "oak": [
+            "oak deno"
+        ]
     }
 }

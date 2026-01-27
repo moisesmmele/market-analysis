@@ -1,0 +1,53 @@
+{
+    "title": "Tools & Productivity",
+    "description": "Version control, project management, and collaboration tools essential for daily workflows.",
+    "terms": {
+        "git": [
+            "git flow",
+            "version control"
+        ],
+        "github": [
+            "gh"
+        ],
+        "gitlab": [],
+        "bitbucket": [],
+        "jira": [
+            "atlassian jira"
+        ],
+        "confluence": [],
+        "trello": [],
+        "figma": [
+            "figma design"
+        ],
+        "adobe xd": [],
+        "sketch": [],
+        "postman": [
+            "api testing"
+        ],
+        "insomnia": [],
+        "swagger": [
+            "openapi"
+        ],
+        "excel": [
+            "microsoft excel",
+            "spreadsheets"
+        ],
+        "notion": [],
+        "slack": [],
+        "microsoft teams": [
+            "ms teams"
+        ],
+        "linux": [
+            "command line",
+            "terminal"
+        ],
+        "visual studio code": [
+            "vscode",
+            "vs code"
+        ],
+        "visual studio": [],
+        "intellij": [
+            "intellij idea"
+        ]
+    }
+}

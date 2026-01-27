@@ -1,6 +1,8 @@
 from os import replace
 from pathlib import Path
 
+import pandas as pd
+
 from jobspy_normalizer import JobspyNormalizer
 from jobspy import scrape_jobs
 from datetime import datetime
@@ -9,25 +11,31 @@ from session import Session
 from config import config
 
 def scrape(args):
-
     sites = ["linkedin"]
-    df = scrape_jobs(
-        site_name=sites,
-        search_term=args.term,
-        location=args.location,
-        results_wanted=args.count,
-        linkedin_fetch_description=True
-    )
+    terms = [t.strip() for t in args.term.split(',')]
+    all_dfs = []
 
+    for term in terms:
+        print(f"Starting scrape for '{term}' in '{args.location}' ({args.count} results)...")
+        df = scrape_jobs(
+            site_name=sites,
+            search_term=term,
+            location=args.location,
+            results_wanted=args.count,
+            linkedin_fetch_description=True
+        )
+        all_dfs.append(df)
+    combined_df = pd.concat(all_dfs, ignore_index=True)
+    clean_df = combined_df.drop_duplicates(subset=['id'], keep='first')
     job_meta = {
         "tool": "jobspy",
-        "term": args.term,
+        "term": terms,
         "location": args.location,
         "sites": sites,
         "count": args.count,
         "country": args.country
     }
-    return df, job_meta
+    return clean_df, job_meta
 
 
 if __name__ == "__main__":
@@ -38,16 +46,17 @@ if __name__ == "__main__":
     parser.add_argument("--count", type=int, default='100', help="Number of jobs to scrape")
     parser.add_argument("--country", type=str, default="Brazil", help="Country for scraping context")
     parser.add_argument("--title", type=str, default="", help="Title for the session")
+    parser.add_argument("--description", type=str, default="", help="Description for the session")
+
     args = parser.parse_args()
 
-    print(f"Starting scrape for '{args.term}' in '{args.location}' ({args.count} results)...")
-
     if args.title == "":
-        title = f"{args.term} - {args.location} - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        title = f"{args.term} - {args.location}"
     else:
         title = args.title
 
     session = Session(title)
+    session.description = args.description
     session.start()
     listings_df, meta = scrape(args)
     session.meta = meta

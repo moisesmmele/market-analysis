@@ -1,10 +1,11 @@
 {
     "title": "Frontend Frameworks",
-    "description": "Libraries and frameworks for building interactive user interfaces.",
+    "description": "Libraries, meta-frameworks, and tools for building interactive web user interfaces.",
     "terms": {
         "react": [
             "reactjs",
-            "react.js"
+            "react.js",
+            "react library"
         ],
         "vue": [
             "vuejs",
@@ -13,46 +14,94 @@
             "vue 2"
         ],
         "angular": [
-            "angularjs",
-            "angular.js",
+            "angular 2+",
+            "angular framework",
             "ng"
         ],
+        "angularjs": [
+            "angular 1",
+            "angular.js"
+        ],
         "svelte": [
-            "sveltejs"
+            "sveltejs",
+            "svelte.js"
+        ],
+        "sveltekit": [
+            "svelte kit",
+            "svelte framework"
+        ],
+        "astro": [
+            "astrojs",
+            "astro.build"
         ],
         "nextjs": [
             "next.js",
-            "next"
+            "next js"
         ],
         "nuxtjs": [
             "nuxt",
-            "nuxt.js"
+            "nuxt.js",
+            "nuxt 3"
         ],
         "gatsby": [
             "gatsbyjs"
         ],
         "remix": [
             "remix.run",
-            "remix run"
+            "remix run",
+            "remix framework"
         ],
         "solidjs": [
-            "solid"
+            "solid-js",
+            "solid framework"
+        ],
+        "solidstart": [
+            "solid start"
+        ],
+        "qwik": [
+            "qwik city",
+            "qwik.js"
         ],
         "alpinejs": [
+            "alpine.js",
             "alpine"
         ],
-        "preact": [],
+        "preact": [
+            "preactjs"
+        ],
         "lit": [
             "lit-element",
-            "lithtml"
+            "lithtml",
+            "lit js"
         ],
-        "qwik": [],
+        "stencil": [
+            "stenciljs",
+            "stencil.js"
+        ],
+        "blazor": [
+            "blazor wasm",
+            "blazor server",
+            "asp.net core blazor"
+        ],
         "ember": [
-            "ember.js"
+            "ember.js",
+            "emberjs"
         ],
         "backbone": [
             "backbone.js"
         ],
-        "htmx": []
+        "jquery": [
+            "jquery.js"
+        ],
+        "htmx": [
+            "high power tools for html"
+        ],
+        "elm": [
+            "elm lang"
+        ],
+        "meteor": [
+            "meteorjs",
+            "meteor.js"
+        ]
     }
 }

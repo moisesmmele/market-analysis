@@ -29,9 +29,11 @@ class Database:
         return index
 
     def save_session(self, session: Session) -> int:
-        session_sql = "INSERT INTO sessions (title, datetime_start, datetime_finish, meta) VALUES (?, ?, ?, ?)"
+        session_sql = "INSERT INTO sessions (title, description, datetime_start, datetime_finish, meta) VALUES (?, ?, ?, ?, ?)"
         cursor = self.conn.cursor()
-        cursor.execute(session_sql, (session.title, session.start_time, session.finish_time, json.dumps(session.meta)))
+        cursor.execute(session_sql, (session.title, session.description,
+                                                session.start_time, session.finish_time,
+                                                json.dumps(session.meta)))
         session_id: int = cursor.lastrowid
         for listing in session.listings:
             self.save_listing(session_id, listing)
@@ -39,10 +41,11 @@ class Database:
         return session_id
 
     def get_session(self, session_id) -> Session:
-        sql = "SELECT id, title, datetime_start, datetime_finish, meta FROM sessions WHERE id = ? ORDER BY datetime_start DESC"
+        sql = "SELECT * FROM sessions WHERE id = ? ORDER BY datetime_start DESC"
         cursor = self.conn.cursor()
         row = cursor.execute(sql,(session_id,)).fetchone()
         session = Session(row['title'])
+        session.description = row['description']
         session.id = int(row['id'])
         session.start_time = datetime.fromisoformat(row['datetime_start'])
         session.finish_time = datetime.fromisoformat(row['datetime_finish'])

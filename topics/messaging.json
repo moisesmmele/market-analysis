@@ -3,13 +3,17 @@
     "description": "Message brokers, streaming platforms, and queuing systems for asynchronous communication.",
     "terms": {
         "kafka": [
-            "apache kafka"
+            "apache kafka",
+            "confluent",
+            "kafka streams"
         ],
         "rabbitmq": [
-            "rabbit"
+            "rabbit",
+            "amqp"
         ],
         "activemq": [
-            "apache activemq"
+            "apache activemq",
+            "jms"
         ],
         "sqs": [
             "simple queue service",
@@ -19,26 +23,60 @@
             "simple notification service",
             "aws sns"
         ],
+        "kinesis": [
+            "aws kinesis",
+            "kinesis data streams"
+        ],
+        "google pub/sub": [
+            "gcp pubsub",
+            "google cloud pub/sub"
+        ],
+        "azure service bus": [
+            "azure sb"
+        ],
+        "azure event hubs": [
+            "event hubs"
+        ],
+        "eventbridge": [
+            "aws eventbridge",
+            "cloudwatch events"
+        ],
         "pulsar": [
             "apache pulsar"
         ],
         "nats": [
-            "nats.io"
-        ],
-        "kinesis": [
-            "aws kinesis"
+            "nats.io",
+            "nats jetstream"
         ],
         "zeromq": [
             "zmq",
             "0mq"
         ],
-        "redpanda": [],
+        "redpanda": [
+            "vectorized"
+        ],
         "solace": [
-            "pubsub+"
+            "pubsub+",
+            "solace systems"
         ],
         "ibmmq": [
-            "ibm mq"
+            "ibm mq",
+            "websphere mq"
         ],
-        "mqtt": []
+        "rocketmq": [
+            "apache rocketmq"
+        ],
+        "redis streams": [
+            "redis pubsub",
+            "redis queue"
+        ],
+        "mqtt": [
+            "mqtt protocol"
+        ],
+        "mosquitto": [
+            "eclipse mosquitto"
+        ],
+        "emqx": [],
+        "hivemq": []
     }
 }

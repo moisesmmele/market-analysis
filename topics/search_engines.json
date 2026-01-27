@@ -1,19 +1,57 @@
 {
     "title": "Search Engines",
-    "description": "Search and analytics engines for indexing and querying large datasets.",
+    "description": "Search and analytics engines for indexing, full-text search, and querying large datasets.",
     "terms": {
         "elasticsearch": [
             "elastic",
             "elk stack",
-            "elk"
+            "es",
+            "elastic search"
         ],
-        "opensearch": [],
+        "opensearch": [
+            "aws opensearch",
+            "amazon opensearch"
+        ],
         "solr": [
-            "apache solr"
+            "apache solr",
+            "solr cloud"
         ],
-        "sphinx": [],
-        "algolia": [],
-        "meilisearch": [],
-        "typesense": []
+        "lucene": [
+            "apache lucene",
+            "lucene core"
+        ],
+        "sphinx": [
+            "sphinx search"
+        ],
+        "manticore": [
+            "manticore search"
+        ],
+        "vespa": [
+            "vespa.ai",
+            "yahoo vespa"
+        ],
+        "algolia": [
+            "algolia search"
+        ],
+        "meilisearch": [
+            "meili"
+        ],
+        "typesense": [
+            "typesense search"
+        ],
+        "quickwit": [],
+        "zincsearch": [
+            "zinc"
+        ],
+        "bleve": [
+            "bleve search"
+        ],
+        "coveo": [
+            "coveo search"
+        ],
+        "azure ai search": [
+            "azure cognitive search",
+            "azure search"
+        ]
     }
 }

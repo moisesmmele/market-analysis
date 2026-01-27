@@ -1,32 +1,100 @@
 {
-    "title": "CSS Frameworks",
-    "description": "Styling frameworks and preprocessors for designing modern web layouts.",
+    "title": "CSS & UI Libraries",
+    "description": "Tools for web styling, including preprocessors, utility frameworks, CSS-in-JS solutions, and UI component kits.",
     "terms": {
         "tailwind": [
-            "tailwindcss"
+            "tailwindcss",
+            "tailwind css"
         ],
-        "bootstrap": [],
+        "bootstrap": [
+            "twitter bootstrap",
+            "bootstrap css"
+        ],
         "sass": [
-            "scss"
+            "scss",
+            "dart sass"
         ],
-        "less": [],
+        "less": [
+            "less css"
+        ],
         "stylus": [],
+        "postcss": [
+            "postcss-loader"
+        ],
         "material ui": [
-            "mui"
+            "mui",
+            "material design"
         ],
         "chakra ui": [
-            "chakra"
+            "chakra",
+            "chakra ui react"
         ],
         "ant design": [
-            "antd"
+            "antd",
+            "ant design vue"
         ],
-        "bulma": [],
+        "shadcn": [
+            "shadcn/ui",
+            "shadcn ui"
+        ],
+        "daisyui": [
+            "daisy ui"
+        ],
+        "radix ui": [
+            "radix",
+            "radix primitives"
+        ],
+        "headless ui": [],
+        "bulma": [
+            "bulma css"
+        ],
         "foundation": [
-            "foundation css"
+            "foundation css",
+            "zurb foundation"
         ],
-        "mantine": [],
-        "styled-components": [],
-        "emotion": [],
-        "vanilla extract": []
+        "mantine": [
+            "mantine dev"
+        ],
+        "vuetify": [
+            "vuetifyjs"
+        ],
+        "quasar": [
+            "quasar framework"
+        ],
+        "nextui": [
+            "next ui"
+        ],
+        "styled-components": [
+            "styled components"
+        ],
+        "emotion": [
+            "emotion css"
+        ],
+        "vanilla extract": [
+            "vanilla-extract"
+        ],
+        "panda css": [
+            "pandacss"
+        ],
+        "stylex": [
+            "stylexjs"
+        ],
+        "unocss": [
+            "uno css"
+        ],
+        "picocss": [
+            "pico css",
+            "pico.css"
+        ],
+        "open props": [
+            "open-props"
+        ],
+        "semantic ui": [
+            "fomantic ui"
+        ],
+        "uikit": [
+            "getuikit"
+        ],
+        "tamagui": []
     }
 }
