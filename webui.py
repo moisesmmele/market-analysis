@@ -1,4 +1,4 @@
-from jobspy_processor import JobspyProcessor
+from processor import JobspyProcessor
 from topic_loader import TopicLoader
 from database import Database
 import streamlit as st

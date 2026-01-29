@@ -3,3 +3,4 @@ openpyxl
 streamlit
 altair
 python-jobspy
+jsonschema

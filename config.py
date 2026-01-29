@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from pathlib import Path
+import json
 
 # Base Values
 base_dir = Path(__file__).parent
@@ -16,6 +17,11 @@ def to_namespace(d):
 config = to_namespace({
     "data_dir": data_dir,
     "topics": base_dir.joinpath("topics"),
+    "mappings": {
+        "mappings_file": base_dir.joinpath("mappings.json"),
+        "provider": "jobspy",
+        "platform": "linkedin"
+    },
     "database": {
         "file": data_dir.joinpath("database.db"),
         "schema": base_dir.joinpath("schema.sql")

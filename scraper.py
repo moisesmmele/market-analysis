@@ -4,6 +4,7 @@ from database import Database
 from session import Session
 from typing import List, Set
 import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 TERMS: dict = {
     "FRONTEND": ['frontend', 'front-end', 'front end'],
@@ -26,34 +27,63 @@ def get_search_terms(args) -> Set[str]:
         return {term.strip() for term in args.term.split(',')}
 
 
+def scrape_single_term(term: str, location: str, count: int) -> pd.DataFrame:
+    """Scrape jobs for a single term - designed to run in parallel."""
+    print(f"Scraping '{term}' in '{location}' ({count} results)...")
+    df = scrape_jobs(
+        site_name=DEFAULT_SITES,
+        search_term=term,
+        location=location,
+        results_wanted=count,
+        linkedin_fetch_description=True
+    )
+    print(f"✓ Completed '{term}' - found {len(df)} listings")
+    return df
+
+
 def scrape(args):
     """
-    Scrape jobs based on the provided arguments.
+    Scrape jobs based on the provided arguments - NOW WITH PARALLEL EXECUTION!
 
     Three modes:
     1. Basic (no args): uses default term 'developer' and location 'Brasil'
-    2. Comprehensive (--comp): scrapes all predefined terms
-    3. Custom: uses user-provided terms and settings
+    2. Comprehensive (--comp): scrapes all predefined terms IN PARALLEL
+    3. Custom: uses user-provided terms and settings IN PARALLEL
     """
-    print("Starting scrape...")
+    print("Starting parallel scrape...")
 
     terms = get_search_terms(args)
     all_dfs: List[pd.DataFrame] = []
 
-    for term in terms:
-        print(f"Scraping '{term}' in '{args.location}' ({args.count} results)...")
-        df = scrape_jobs(
-            site_name=DEFAULT_SITES,
-            search_term=term,
-            location=args.location,
-            results_wanted=args.count,
-            linkedin_fetch_description=True
-        )
-        all_dfs.append(df)
+    # Determine number of workers based on number of terms
+    # Using min to avoid overwhelming the system
+    max_workers = min(args.workers, len(terms))
+
+    print(f"Using {max_workers} parallel workers for {len(terms)} terms")
+
+    # Use ThreadPoolExecutor for parallel scraping
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all scraping tasks
+        future_to_term = {
+            executor.submit(scrape_single_term, term, args.location, args.count): term
+            for term in terms
+        }
+
+        # Collect results as they complete
+        for future in as_completed(future_to_term):
+            term = future_to_term[future]
+            try:
+                df = future.result()
+                all_dfs.append(df)
+            except Exception as exc:
+                print(f"'{term}' generated an exception: {exc}")
 
     # merge dataframes and dedupe using df['id']
     combined_df = pd.concat(all_dfs, ignore_index=True)
     clean_df = combined_df.drop_duplicates(subset=['id'], keep='first')
+
+    print(f"\nTotal listings scraped: {len(combined_df)}")
+    print(f"Unique listings after deduplication: {len(clean_df)}")
 
     session_meta = {
         "tool": "jobspy",
@@ -61,6 +91,7 @@ def scrape(args):
         "location": args.location,
         "sites": DEFAULT_SITES,
         "count": args.count,
+        "parallel_workers": max_workers,
     }
 
     return clean_df, session_meta
@@ -75,6 +106,7 @@ def create_session_title(args) -> str:
     else:
         return f"{args.term} - {args.location}"
 
+
 def create_session_description(args) -> str:
     """Generate an appropriate session description based on arguments."""
     if args.description:
@@ -88,7 +120,7 @@ def create_session_description(args) -> str:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Job Scraper CLI")
+    parser = argparse.ArgumentParser(description="Job Scraper CLI - NOW WITH PARALLEL EXECUTION!")
     parser.add_argument("--term", type=str, default='developer',
                         help="Search term(s), comma-separated (e.g., 'Python Developer, Java Developer')")
     parser.add_argument("--location", type=str, default='Brasil',
@@ -101,12 +133,14 @@ if __name__ == "__main__":
                         help="Custom description for the session")
     parser.add_argument("--comp", action='store_true',
                         help="Comprehensive scrape using all predefined terms")
+    parser.add_argument("--workers", type=int, default=2,
+                        help="Number of parallel workers (default: 2)")
 
     args = parser.parse_args()
 
     # if count is default and comp is true, override it
     if args.comp and args.count == 100:
-        args.count = 1000
+        args.count = 200
 
     title = create_session_title(args)
     description = create_session_description(args)

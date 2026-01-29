@@ -14,11 +14,6 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS listings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id INTEGER,
-    location TEXT,
-    company TEXT, 
-    job_level TEXT,
-    title TEXT,
-    date_posted TEXT,
     raw_data TEXT, -- Raw JSON data
     FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
 );

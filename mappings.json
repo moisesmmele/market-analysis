@@ -1,0 +1,52 @@
+{
+  "canonical": {
+    "fields": ["title", "description", "job_level"],
+    "job_level": {
+      "early career": [
+        "intern", "internship", "trainee", "apprentice",
+        "estagiario", "estagiaria", "aprendiz", "estagio", "estag",
+        "junior", "jr", "entry-level", "entry", "iniciante"
+      ],
+      "experienced": [
+        "pleno", "plena", "pl", "mid-level", "mid", "intermediate",
+        "intermediario", "intermediaria", "senior", "sr"
+      ],
+      "leadership": [
+        "manager", "mgr", "gerente", "ger", "gestor", "gestora", "gestor(a)",
+        "supervisor", "supervisora", "supervisor(a)", "coordenador", "coordenadora", "coordenador(a)",
+        "coordinator", "lider"
+      ],
+      "executive": [
+        "director", "diretor", "diretora", "diretor(a)", "executive", "exec",
+        "executivo", "executiva", "vp", "vice-president",
+        "vice-presidente", "head", "chief", "clevel", "presidente"
+      ],
+      "other": [
+        "freelancer", "freelance", "consultant", "consultor", "consultora",
+        "contractor", "autonomo", "autonoma", "empreendedor", "empreendedora",
+        "prestador", "prestadora","prestador(a)", "self-employed"
+      ]
+    }
+  },
+  "providers": {
+    "jobspy": {
+      "fields": {
+        "external_id": "id",
+        "title": "title",
+        "job_level": "job_level",
+        "description": "description"
+      }
+    }
+  },
+  "platforms": {
+    "linkedin": {
+      "job_level": {
+        "early career": ["internship", "entry level", "associate"],
+        "experienced": ["mid-senior level", "mid-senior level"],
+        "manager": ["manager"],
+        "executive": ["director", "executive"],
+        "other": ["not applicable"]
+      }
+    }
+  }
+}

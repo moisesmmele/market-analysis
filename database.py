@@ -1,6 +1,4 @@
-from datetime import datetime
 from session import Session
-from listing import Listing
 from config import config
 import sqlite3
 import json
@@ -31,7 +29,7 @@ class Database:
         self.conn.commit()
 
     def get_index(self) -> dict[int, str]:
-        """Returns a index dict, since get_session is recursive (fetches all listings)"""
+        """Returns an index dict, since get_session is recursive (fetches all listings)"""
 
         sql = "SELECT * FROM sessions ORDER BY id DESC"
         rows = (self.conn.cursor()).execute(sql).fetchall()
@@ -48,8 +46,7 @@ class Database:
         session_id: int = cursor.execute(sql, params).lastrowid
         cursor.close()
 
-        for listing in session.listings:
-            self.save_listing(session_id, listing)
+        self.save_listings(session.raw_listings)
 
         # Commit transaction
         self.conn.commit()
@@ -62,49 +59,37 @@ class Database:
         sql = "SELECT * FROM sessions WHERE id = ? ORDER BY datetime_start DESC"
         params = (session_id,)
 
-        # fetch row
         cursor = self.conn.cursor()
-        row = cursor.execute(sql,params).fetchone()
+        row = cursor.execute(sql, params).fetchone()
         cursor.close()
 
         if row is None:
             return None
 
-        # Build Session
-        # Should think about how to make it a dataclass and use **args to unpack
-        session = Session(row['title'])
-        session.description = row['description']
-        session.id = int(row['id'])
-        session.start_time = datetime.fromisoformat(row['datetime_start'])
-        session.finish_time = datetime.fromisoformat(row['datetime_finish'])
-        session.meta = json.loads(row['meta'])
-        session.listings = self.get_listings(session)
+        session = Session.from_row(dict(row))
+        session.raw_listings = self.get_listings(session_id)
 
         return session
 
-    def get_listings(self, session: Session) -> list[Listing]:
+    def get_listings(self, session_id) -> list[dict[str, str]]:
         """retrieves listings for a given session"""
 
-        sql = "SELECT id, location, company, job_level, title, date_posted, raw_data FROM listings WHERE session_id = ?"
+        sql = "SELECT * FROM listings WHERE session_id = ?"
         cursor = self.conn.cursor()
-        cursor.execute(sql, (session.id,))
+        cursor.execute(sql, (session_id,))
         rows = cursor.fetchall()
         cursor.close()
 
-        return [Listing(**dict(row)) for row in rows] if rows else []
+        # is this idiotic? i mean Row is Any, i'm at least forcing it to Dict
+        return [dict(row) for row in rows] if rows else []
 
     # only called within save_session, no commit required
-    def save_listing(self, session_id: int, listing: Listing) -> int:
+    def save_listings(self, listings: list[dict[str, str]]) -> int:
         """Saves a listing to the database. Commit is done by save_session"""
-
-        sql = ("INSERT INTO listings "
-               "(session_id, location, company, job_level, title, date_posted, raw_data) "
-               "VALUES (?, ?, ?, ?, ?, ?, ?)")
-        params = (session_id, listing.location, listing.company, listing.job_level,
-                  listing.title, listing.date_posted, listing.raw_data)
-
+        sql = "INSERT INTO LISTINGS (session_id, raw_data) VALUES (?, ?)"
+        data: list[tuple[str, str]] = [(d.get('session_id'), d.get('raw_data')) for d in listings]
         cursor = self.conn.cursor()
-        listing_id = cursor.execute(sql, params).lastrowid
+        listing_id = cursor.executemany(sql, data).lastrowid
         cursor.close()
 
         return listing_id
