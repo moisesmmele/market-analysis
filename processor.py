@@ -1,9 +1,10 @@
-from listing_factory import ListingFactory
+from PIL.ImageChops import difference
+
+from dynamic_listing_factory import DynamicListingFactory
+from dynamic_listing import DynamicListing
 from mappings_loader import MappingsLoader
 from text_processor import TextProcessor
-from topic_loader import TopicLoader
 from collections import Counter
-from database import Database
 from datetime import datetime
 from listing import Listing
 from session import Session
@@ -14,38 +15,108 @@ import json
 
 class Processor:
 
-    indexed_ngrams: dict[str, dict[str, set[str]]] = None
-    indexed_job_level: dict[str, list] = None
-    buckets: dict[str, dict[str, Any]] = None
+    _indexed_ngrams = None
+    _indexed_job_level: dict[str, list] = None
+    _buckets: dict[str, dict[str, Any]] = None
+    _listings: dict[int, DynamicListing] = None
+    _topics: list[Topic] = None
+    _session: Session = None
+
     results: list[dict[str, Any]] = None
-    listings: list[Listing] = None
-    topics: list[Topic] = None
-    session: Session = None
+    metrics: dict[str, dict[str, str]] = None
 
     # TODO: 1. IMPLEMENT BOOL OR METRICS RETURNS FOR EVERY METHOD THAT RETURNS NONE / HAS EFFECT / CHANGES STATE
     # TODO: 2. IMPLEMENT GUARD CLAUSES / EARLY RETURN ON PROCESS METHOD
 
     def __init__(self, session: Session, topics: list[Topic]) -> None:
-        self.session = session
+        self._session = session
         self.topics = topics
 
     def process(self) -> Any:
+        start = datetime.now()
         self.build_listings()
+        self.sanitize_listings()
         self.extract_ngrams()
+        self.deduplicate()
         self.extract_job_level()
         self.match_and_count()
         self.update_totals()
-        self._debug_dump()
-        self.build_results()
+        #self.build_results()
+        end = datetime.now()
+        delta = end - start
+        print(f"Process took: {str(delta)[:-3]}")
+        with open("counts.json", "w") as f:
+            json.dump(self._buckets, f, indent=4)
+
+    def deduplicate(self):
+        duplicates = set()
+        processed = 0
+        iterations = 0
+        start = datetime.now()
+        for index_a, listing_a in self._listings.items():
+            processed += 1
+            # cache reference for set_a outside the inner loop
+            unigrams_a = self._indexed_ngrams[index_a].get("description").get("unigrams")
+            for index_b, listing_b in self._listings.items():
+                iterations += 1
+
+                # skip if same index
+                if index_a == index_b: continue
+
+                # early detect if external_id available and same
+                if listing_a.external_id and listing_b.external_id:
+                    if listing_a.external_id == listing_b.external_id:
+                        duplicates.add(index_b)
+                        continue
+
+                # early detect if description is exactly the same
+                if listing_a.description == listing_b.description:
+                    duplicates.add(index_b)
+                    continue
+
+                unigrams_b = self._indexed_ngrams[index_b].get("description").get("unigrams")
+
+                # get the size of intersection A in B
+                intersection_count = len(unigrams_a & unigrams_b)
+                if not intersection_count: continue
+
+                # get the size of union A with B
+                union_count = len(unigrams_a) + len(unigrams_b) - intersection_count
+
+                if not union_count: continue
+
+                # calculate Jaccard index by dividing intersection per union
+                jaccard_sim = intersection_count / union_count
+
+                # if sim above 90% mark it as duplicate
+                if jaccard_sim >= 0.90:
+                    duplicates.add(index_b)
+                    continue
+                    #print(f"Near duplicate detected for {index_a} in {index_b}: {jaccard_sim}")
+
+                # If between 80% and 90% we check title as tie-breaker
+                if 0.80 <= jaccard_sim <= 0.90:
+                    #print(f"some similarity detected for {index_a} in {index_b}: {jaccard_sim}")
+                    #print(f"using title as tie-braker: {listing_a.title} == {listing_b.title}?")
+                    if listing_a.title == listing_b.title:
+                        #print("Considered duplicate")
+                        duplicates.add(index_b)
+
+        for index in duplicates:
+            self._listings.pop(index)
+
+
+        end = datetime.now()
+        delta = end - start
 
     def match_and_count(self) -> None:
         # initialize buckets
         self.generate_buckets()
 
         # iterate over listings
-        for _listing in self.listings:
+        for index, _listing in self._listings.items():
             # get ngrams for current listing
-            _ngrams: set[str] = self.indexed_ngrams.get(_listing.id).get("ngrams")
+            _ngrams: set[str] = self._indexed_ngrams[index]["ngrams"]
 
             if not _ngrams:
                 continue
@@ -56,95 +127,101 @@ class Processor:
 
                 # update deepest bucket
                 if matched_terms:
-                    mutated_job_level = self.indexed_job_level.get(_listing.id)
+                    mutated_job_level = self._indexed_job_level.get(_listing.id)
                     self.update_buckets(topic.title, mutated_job_level, matched_terms)
             self.listing_processed()
 
     def extract_ngrams(self) -> None:
-        # Initialize index
-        self.indexed_ngrams: dict[str, dict[str, set[str]]] = {}
+        # Note: currently this is too manual for my taste, need to abstract
+        if not self._listings:
+            pass
 
-        # iterate over listings
-        for _listing in self.listings:
-            # sanitize original values
-            description = TextProcessor.sanitize(_listing.description)
-            _title = TextProcessor.sanitize(_listing.title)
+        self._indexed_ngrams = {}
+        _metrics = {"processed": 0}
+        for index, _listing in self._listings.items():
 
-            # combine it for more certainty
-            combined = f"{description} {_title}"
+            title = TextProcessor.remove_stopwords(_listing.title)
+            title_unigrams: set[str] = set(TextProcessor.extract_unigrams(title))
+            title_bigrams: set[str] = set(TextProcessor.extract_bigrams(title))
+            title_ngrams: set[str] = title_unigrams | title_bigrams
 
-            # get unigrams
-            _unigrams = set(combined.split())
+            description = TextProcessor.remove_stopwords(_listing.description)
+            description_unigrams: set[str] = set(TextProcessor.extract_unigrams(description))
+            description_bigrams: set[str] = set(TextProcessor.extract_bigrams(description))
+            description_ngrams: set[str] = description_unigrams | description_bigrams
 
-            #extract bigrams
-            _bigrams = set(TextProcessor.extract_bigrams(combined))
+            combined_ngrams: set[str] = title_ngrams | description_ngrams
 
-            indexed_ngrams = {
-                "unigrams": _unigrams,
-                "bigrams": _bigrams,
-                "ngrams": _unigrams | _bigrams,
+            self._indexed_ngrams[index] = {
+                "title": {
+                    "unigrams": title_unigrams,
+                    "bigrams": title_bigrams,
+                    "ngrams": title_ngrams,
+                },
+                "description": {
+                    "unigrams": description_unigrams,
+                    "bigrams": description_bigrams,
+                    "ngrams": description_ngrams
+                },
+                "ngrams": combined_ngrams,
             }
+            _metrics["processed"] += 1
+        return _metrics
 
-            self.indexed_ngrams[_listing.id] = indexed_ngrams
-
-    def extract_job_level(self) -> None:
-        print(f"DEBUG: Hit Processor.extract_job_level()")
-        # load mappings from cached
+    def extract_job_level(self) -> dict[str, Any]:
         mappings = MappingsLoader.get_mappings()
-        # get canonical map for job_level field
         job_levels = mappings["canonical"].get("job_level")
-        # zero/initialize index
-        self.indexed_job_level: dict[str, str] = {}
 
-        # iterate over loaded listings
-        for _listing in self.listings:
-            #print(f"DEBUG: iterating over self.listings - currently on {_listing.id}")
-            # defaults to current value
-            self.indexed_job_level[_listing.id] = _listing.job_level
-            #print(f"DEBUG: Defaulted to current state: {_listing.job_level}")
+        self._indexed_job_level: dict[str, str] = {}
 
-            # if we have custom mappings for job_level
+        _metrics = {"processed": 0, "mutations": 0}
+        for _index, _listing in self._listings.items():
+            self._indexed_job_level[_listing.id] = _listing.job_level
+
             if job_levels:
-                # tokenize title
-                tokens = TextProcessor.sanitize(_listing.title).split()
-                #print(f"DEBUG: Sanitized title tokens: {tokens}")
-                # iterate over possible levels, using reversed to respect hierarchy over experience
+                title_tokens = _listing.title.split()
+
+                # Iterate over levels; Use reversed to respect hierarchy
                 found = False
                 for canonical in reversed(list(job_levels.keys())):
-                    #print(f"DEBUG: Iterating over possible job-levels for: {canonical}")
                     variations = set(job_levels[canonical])
-                    #print(f"DEBUG: Current possible variations: {variations}")
-                    # iterate over possible variations
                     for variation in variations:
-                        # if we match a variation with any title token
-                        #print(f"DEBUG: Checking if {variation} is in {tokens}")
-                        if variation in tokens:
-                            self.indexed_job_level[_listing.id] = canonical
-                            print(f"DEBUG: Found: {variation} in {_listing.title}")
-                            print(f"DEBUG: Current: {_listing.job_level} Indexed: {canonical}")
-                            # signal to break outer loop
+                        if variation in title_tokens:
+                            self._indexed_job_level[_listing.id] = canonical
+                            if config.mode.dev:
+                                print(f'found match for '
+                                      f'"{canonical}" -> "{variation}" '
+                                      f'in {_listing.id}: "{" ".join(title_tokens)}"')
                             found = True
-                            # break inner loop
+                            _metrics["mutations"] += 1
                             break
                     if found:
                         break
+            _metrics["processed"] += 1
+            if config.mode.dev:
+                print(_metrics)
+        return _metrics
 
     def build_listings(self) -> None:
-            self.listings: list[Listing] = []
-            for _listing in self.session.raw_listings:
-                self.listings.append(ListingFactory.create(_listing['id'],_listing['raw_data']))
+        if not self._session:
+            pass
+
+        self._listings: dict[int, DynamicListing] = {}
+
+        for index, listing in self._session.listings.items():
+            self._listings[index] = DynamicListingFactory.create(index, listing.raw_data)
 
     def update_totals(self) -> None:
-        global_matches = self.buckets["total"]["matches_counter"]
+        global_matches = self._buckets["total"]["matches_counter"]
         for topic in self.topics:
-            topic_bucket = self.buckets[topic.title]
+            topic_bucket = self._buckets[topic.title]
             for level_data in topic_bucket["per_level"].values():
                 topic_bucket["listings_counter"] += level_data["listings_counter"]
                 topic_bucket["matches_counter"].update(level_data["matches_counter"])
             global_matches.update(topic_bucket["matches_counter"])
 
     def listing_processed(self) -> None:
-        self.buckets["total"]["listings_counter"] += 1
+        self._buckets["total"]["listings_counter"] += 1
 
     def build_results(self):
         # TODO: Implement :P
@@ -158,7 +235,7 @@ class Processor:
         job_levels: dict = canonical_mappings.get("job_level", {})
 
         # initialize buckets with total counter
-        self.buckets = {
+        self._buckets = {
             "total": {
                 "listings_counter": 0,
                 "matches_counter": Counter()
@@ -167,7 +244,7 @@ class Processor:
 
         # dynamically generate buckets for each topic
         for topic in self.topics:
-            self.buckets[topic.title] = {
+            self._buckets[topic.title] = {
                 "listings_counter": 0,
                 "matches_counter": Counter(),
                 "per_level": {}
@@ -175,62 +252,95 @@ class Processor:
 
             # dynamically generate buckets for each job_level
             for level in job_levels.keys():
-                self.buckets[topic.title]["per_level"][level] = {
+                self._buckets[topic.title]["per_level"][level] = {
                     "listings_counter": 0,
                     "matches_counter": Counter()
                 }
 
     def update_buckets(self, topic: str, job_level, matches: set[str]) -> None:
-        self.buckets[topic]["per_level"][job_level]["listings_counter"] += 1
-        self.buckets[topic]["per_level"][job_level]["matches_counter"].update(matches)
+        self._buckets[topic]["per_level"][job_level]["listings_counter"] += 1
+        self._buckets[topic]["per_level"][job_level]["matches_counter"].update(matches)
 
-    def _debug_dump(self, ngrams: bool = False) -> None:
-        timestamp = datetime.now().isoformat()
-        _dump = {
-            "dumped_at": timestamp,
-            "session": {},
-            "topics": {},
-            "listings": {},
-            "indexed_ngrams": {},
-            "indexed_job_level": self.indexed_job_level,
-            "buckets": self.buckets,
-        }
+    def sanitize_listings(self):
+        for index, listing in self._listings.items():
+            sanitized_title = TextProcessor.sanitize(listing.title)
+            listing.title = sanitized_title
+
+            sanitized_description = TextProcessor.sanitize(listing.description)
+            listing.description = sanitized_description
+
+    def _debug_dump(
+            self,
+            ngrams: bool = False,
+            session: bool = False,
+            topics: bool = False,
+            listings: bool = False,
+            indexed_job_levels: bool = False,
+            indexed_ngrams: bool = False,
+            buckets: bool = False,
+            include_raw: bool = False,
+            full: bool = False,
+        ) -> None:
+
+        if not config.mode.dev:
+            pass
+
+        timestamp = datetime.now()
+        _filename = f"debug_dump_{timestamp.strftime("%Y%m%d_%H%M%S")}.json"
+
+        print(f"DEBUG: Dumping Processor state at {config.data_dir}")
+
+        _dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "metrics": self._metrics}
+
         # session update
-        _dump["session"].update({
-            "id": self.session.id,
-            "title": self.session.title,
-            "description": self.session.description,
-            "start_time": self.session.start_time.isoformat(),
-            "finish_time": self.session.finish_time.isoformat(),
-            "meta": self.session.meta,
-            "listings": len(self.session.raw_listings),
-        })
+        if session or full:
+            _dump["session"] = {}
+
+            if not self._session:
+                _dump["session"] = "Not Assigned"
+
+            else:
+                _dump["session"] = {
+                    "id": self._session.id,
+                    "title": self._session.title,
+                    "description": self._session.description,
+                    "start_time": self._session.start_time.isoformat(),
+                    "finish_time": self._session.finish_time.isoformat(),
+                    "meta": self._session.meta,
+                    "listings": len(self._session.raw_listings),
+                }
 
         # dump topics loaded
-        for index, topic in enumerate(self.topics):
-            _dump["topics"][index] = ({
-                "title": topic.title,
-                "description": topic.description,
-                "terms": topic.terms,
-            })
+        if topics or full:
+            _dump["topics"] = {}
+
+            if not self._topics:
+                _dump["topics"] = "Not Assigned"
+            else:
+                for index, topic in enumerate(self.topics):
+                    _dump["topics"][index] = {
+                        "title": topic.title,
+                        "description": topic.description,
+                        "terms": topic.terms,
+                    }
 
         # dump processed listings
-        raw_listing_map = {item['id']: item for item in self.session.raw_listings}
-        for index, _listing in enumerate(self.listings):
-            matching_raw_list = raw_listing_map.get(_listing.id)
-            parsed_matching_raw_list = json.loads(matching_raw_list["raw_data"])
-            _dump["listings"][index]=({
-                "id": _listing.id,
-                "title": _listing.title,
-                "job_level": _listing.job_level,
-                "description": _listing.description,
-                "external_id": _listing.external_id,
-                "sanitized": {
-                    "title": TextProcessor.sanitize(parsed_matching_raw_list["title"]),
-                    "description": TextProcessor.sanitize(parsed_matching_raw_list["description"]),
-                },
-                "raw_data": parsed_matching_raw_list,
-            })
+        if listings or full:
+            _dump["listings"] = {}
+
+            if not self._listings:
+                _dump["listings"] = "Not Assigned"
+
+            else:
+                for index, _listing in self._listings.items():
+                    _dump["listings"][index]= {
+                        "id": _listing.id,
+                        "title": _listing.title,
+                        "job_level": _listing.job_level,
+                        "description": _listing.description,
+                        "external_id": _listing.external_id,
+                        "raw_data": json.loads(self._session.raw_listings[index]),
+                    }
 
         # dump indexed ngrams
         if ngrams:
@@ -252,4 +362,3 @@ class Processor:
             json.dump(_dump, out, indent=2)
         with open(config.data_dir.joinpath("counts.json"), "w") as out:
             json.dump(self.buckets, out, indent=2)
-

@@ -1,4 +1,4 @@
-from listing import Listing
+from dynamic_listing import Listing
 import pandas as pd
 import json
 

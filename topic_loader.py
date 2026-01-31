@@ -1,30 +1,49 @@
 from config import config
 from topic import Topic
+from typing import Any
 import json
 
 class TopicLoader:
-    topics: dict[str, Topic]
-    def __init__(self):
-        self.topics: dict[str, Topic] = {}
 
-    def get_available(self) -> set[str]:
-        """read JSON files with topic definitions and returns the available topics"""
-        topics: dict[str, Topic] = {}
-        available: set[str] = set()
-        for file in config.topics.glob("*.json"):
-            try:
-                with open(file, "r", encoding='utf-8') as f:
-                    topic = Topic(**json.load(f))
-                    topics[topic.title] = topic
-                    available.add(topic.title)
-            except (json.decoder.JSONDecodeError, TypeError) as e:
-                print(f"error: could not parse {file}\n{str(e)}")
-        self.topics = topics
-        return available
+    _LOADED_TOPICS: dict[int, Topic] | None = None
 
-    def load(self, selected: set[str]) -> list[Topic]:
-        topics: list[Topic] = list()
-        for topic in selected:
-            selected_topic = self.topics[topic]
-            topics.append(selected_topic)
-        return topics
+    @classmethod
+    def _ensure_loaded(cls) -> None:
+        if not cls._LOADED_TOPICS or config.mode.dev:
+            cls.load()
+
+    @classmethod
+    def load(cls) -> None:
+        cls._LOADED_TOPICS: dict[int, Topic] = {}
+        files = sorted(config.topics.glob("*.json"))
+        for index, file in enumerate(files):
+            with open(file, "r", encoding='utf-8') as f:
+                cls._LOADED_TOPICS[index] = Topic(**json.load(f))
+
+    @classmethod
+    def get_available(cls) -> dict[int, dict[str, str]]:
+        cls._ensure_loaded()
+        return {
+            index: {
+                "title": topic.title,
+                "description": topic.description,
+                "terms_count": str(len(topic.terms))
+            }
+            for index, topic in cls._LOADED_TOPICS.items()
+        }
+
+    @classmethod
+    def select(cls, selected: list[int] = None, all_topics: bool = False ) -> list[Topic]:
+        cls._ensure_loaded()
+
+        if all_topics:
+            return [cls._LOADED_TOPICS[i] for i in cls._LOADED_TOPICS]
+
+        if not selected:
+            return []
+
+        return [
+            cls._LOADED_TOPICS[index]
+            for index in selected
+            if index in cls._LOADED_TOPICS
+        ]

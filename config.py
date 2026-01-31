@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 from pathlib import Path
 import json
@@ -17,6 +18,7 @@ def to_namespace(d):
 config = to_namespace({
     "data_dir": data_dir,
     "topics": base_dir.joinpath("topics"),
+    "mode": {"dev": False},
     "mappings": {
         "mappings_file": base_dir.joinpath("mappings.json"),
         "provider": "jobspy",

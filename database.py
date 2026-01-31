@@ -1,3 +1,4 @@
+from listing import Listing
 from session import Session
 from config import config
 import sqlite3
@@ -31,10 +32,12 @@ class Database:
     def get_index(self) -> dict[int, str]:
         """Returns an index dict, since get_session is recursive (fetches all listings)"""
 
-        sql = "SELECT * FROM sessions ORDER BY id DESC"
-        rows = (self.conn.cursor()).execute(sql).fetchall()
+        # language=sql
+        subquery = "(SELECT COUNT(*) FROM listings WHERE listings.session_id = sessions.id) as listings_count"
+        query = f"SELECT id, title, {subquery} FROM sessions ORDER BY id DESC"
 
-        return {row['id']: row['title'] for row in rows} if rows else {}
+        rows = (self.conn.cursor()).execute(query).fetchall()
+        return {row['id']: {"title": row['title'], "listings": row["listings_count"]} for row in rows} if rows else {}
 
     def save_session(self, session: Session) -> int:
         """Saves a new session and its listings, only commit after every listing is saved"""
@@ -67,11 +70,11 @@ class Database:
             return None
 
         session = Session.from_row(dict(row))
-        session.raw_listings = self.get_listings(session_id)
+        session.listings = {i: l for i, l in self.get_listings(session_id).items()}
 
         return session
 
-    def get_listings(self, session_id) -> list[dict[str, str]]:
+    def get_listings(self, session_id) -> dict[int, Listing]:
         """retrieves listings for a given session"""
 
         sql = "SELECT * FROM listings WHERE session_id = ?"
@@ -79,9 +82,7 @@ class Database:
         cursor.execute(sql, (session_id,))
         rows = cursor.fetchall()
         cursor.close()
-
-        # is this idiotic? i mean Row is Any, i'm at least forcing it to Dict
-        return [dict(row) for row in rows] if rows else []
+        return {int(row["id"]): Listing.from_row(row) for row in rows} if rows else {}
 
     # only called within save_session, no commit required
     def save_listings(self, listings: list[dict[str, str]]) -> int:

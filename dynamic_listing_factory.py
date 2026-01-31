@@ -1,15 +1,12 @@
+from mappings_loader import MappingsLoader
+from dynamic_listing import DynamicListing
 from typing import Any
-
-from listing import Listing
 import json
 
-from mappings_loader import MappingsLoader
-
-
-class ListingFactory:
+class DynamicListingFactory:
 
     @staticmethod
-    def create(listing_id: str, raw_data: str) -> Listing:
+    def create(listing_id: int, raw_data: str) -> DynamicListing:
 
         mappings: dict[str, dict[str, Any]] = MappingsLoader.get_mappings()
         provider_map: dict[str, Any] = mappings["provider"]
@@ -17,9 +14,9 @@ class ListingFactory:
 
         parsed_listing_data: dict[str, str] = json.loads(raw_data)
 
-        mapped_data = {"id": listing_id}
+        mapped_data = {"id": str(listing_id)}
 
-        valid_keys = set(Listing.__annotations__.keys())
+        valid_keys = set(DynamicListing.__annotations__.keys())
         valid_keys.remove('id')
 
         for canonical_field in valid_keys:
@@ -44,4 +41,4 @@ class ListingFactory:
                         mapped_data[canonical_field] = canonical_term
                         break
 
-        return Listing(**mapped_data)
+        return DynamicListing(**mapped_data)

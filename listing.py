@@ -2,8 +2,10 @@ from dataclasses import dataclass
 
 @dataclass
 class Listing:
-    id: str
-    external_id: str = None
-    title: str = None
-    description: str = None
-    job_level: str = None
+    id: int = None
+    session_id: str = None
+    raw_data: str = None
+
+    @classmethod
+    def from_row(cls, row: dict) -> 'Listing':
+        return cls(**{key: row[key] for key in cls.__annotations__.keys()})

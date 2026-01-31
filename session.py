@@ -3,13 +3,16 @@ from datetime import datetime
 from typing import Any
 import json
 
+from listing import Listing
+
+
 @dataclass
 class Session:
     title: str = None
     description: str = None
     start_time: datetime = None
     finish_time: datetime = None
-    raw_listings: list[dict[str, str]] = None
+    listings: dict[int, Listing] = None
     meta: dict[str, Any] = None
     id: int = None
 
