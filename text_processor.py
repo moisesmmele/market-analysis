@@ -1,43 +1,13 @@
-from collections import Counter
 import unicodedata
+import ftfy
 import html
 import re
 
-from pandas.core.computation.expr import intersection
 
 
 class TextProcessor:
-    UNICODE_REPLACEMENTS: dict[str, list[str]] = {
-        # Dashes
-        "-": [
-            "&mdash;", "&#8212;", "&#x2014;", "\u2014",
-            "&ndash;", "&#8211;", "&#x2013;", "\u2013",
-            "&#8208;", "&#x2010;", "\u2010",
-            "&#8209;", "&#x2011;", "\u2011",
-            "&#8210;", "&#x2012;", "\u2012",
-            "&#8213;", "&#x2015;", "\u2015"
-        ],
 
-        # Single Quotes / Apostrophes
-        "'": [
-            "&rsquo;", "&#8217;", "&#x2019;", "\u2019",
-            "&lsquo;", "&#8216;", "&#x2018;", "\u2018",
-            "&apos;", "&#39;", "&#x27;", "\u0027"
-        ],
 
-        # Double Quotes
-        '"': [
-            "&rdquo;", "&#8221;", "&#x201d;", "\u201d",
-            "&ldquo;", "&#8220;", "&#x201c;", "\u201c",
-            "&quot;", "&#34;", "&#x22;", "\u0022"
-        ],
-
-        # Non-breaking Spaces
-        " ": ["&nbsp;", "&#160;", "&#xa0;", "\u00a0"],
-
-        # Ellipsis
-        "...": ["&hellip;", "&#8230;", "&#x2026;", "\u2026"]
-    }
     STOPWORDS: set[str] =[
         "a", "o", "e", "de", "do", "da", "em", "um", "uma", "para", "com", "por",
         "se", "no", "na", "os", "as", "ao", "aos", "nas", "dos", "das", "que",
@@ -60,6 +30,7 @@ class TextProcessor:
         "find", "did", "down", "come", "made", "may", "part"
 
     ]
+    VIP_CHARS = {'+', '#', '.', ',', '-', '$', ' ', "'"}
 
     @classmethod
     def remove_stopwords(cls, text: str) -> str:
@@ -74,39 +45,123 @@ class TextProcessor:
         if not text:
             return ""
 
-        # Replace unicode codes with ascii variations
-        for replacement, variations in cls.UNICODE_REPLACEMENTS.items():
-            for variant in variations:
-                text = text.replace(variant, replacement)
+        # fix broken encoding
+        text = ftfy.fix_text(text)
 
-        # decode any other unicode code to whatever (will strip it down later)
+        # convert HTML Entities into Unicode
         text = html.unescape(text)
 
-        # lowercase everything
+        # Remove weird/uncommon characters
+        # Normalize Unicode Compatibility Characters to Canonical Characters
+        # (Normalization Form - (K)Compatibility Composition)
+        text = unicodedata.normalize('NFKC', text)
+
+        # strip accent marks - stage 1
+        # Decompose Unicode Precomposed Characters to Canonical Decomposed Sequences Equivalents
+        # (Normalization Form - (Canonical) Decomposition)
+        text = unicodedata.normalize('NFD', text)
+
+        # Individual char replacements based on Unicode Category
+        # Iterate over Text and assert its category
+        chars = []
+        for index, character in enumerate(text):
+            # UC means Unicode Category
+            uc = unicodedata.category(character)
+
+            # Allow Any letters
+            if uc.startswith('L'):
+                chars.append(character)
+                continue
+
+            # Allow Numbers
+            if uc.startswith('N'):
+                chars.append(character)
+                continue
+
+            # Strip Accent Marks - Stage 2
+            # If Unicode Category is "Mark, nonspacing", ignore it
+            if uc == "Mn":
+                continue
+
+            # Remove emojis and other symbols
+            # If UC is "Symbol, other", ignore it
+            if uc == "So":
+                continue
+
+            # Remove control chars
+            # If UC is part of "Control" upper category, ignore it
+            if uc.startswith('C'):
+                continue
+
+            # normalize spaces
+            # If UC is part of "Separator" upper category,
+            # replace it with a standard space
+            if uc.startswith('Z'):
+                chars.append(' ')
+                continue
+
+            # Normalize Currency Marks
+            # If UC is "Symbol, currency",
+            # Replace it with a dollar sign
+            if uc == 'Sc':
+                chars.append("$")
+                continue
+
+            # Normalize Dashes
+            # If UC is "Punctuation, dash",
+            # Replace it with a hyphen
+            if uc == 'Pd':
+                if index < 1 or index > len(text) - 1:
+                    leading = text[index - 1]
+                    leading_uc = unicodedata.category(leading)
+                    trailing = text[index + 1]
+                    trailing_uc = unicodedata.category(trailing)
+                    if leading_uc.startswith('L') or trailing_uc.startswith('L'):
+                        chars.append("-")
+                    else:
+                        chars.append(" ")
+                    continue
+
+            # Normalize Quotes
+            # If UC is "Punctuation, initial" or "Punctation, final"
+            # Replace it with a standard quotation mark
+            if uc in ("Pi", "Pf"):
+                chars.append('"')
+                continue
+
+            # If no other matches, check VIP list
+            if character in cls.VIP_CHARS:
+                chars.append(character)
+                continue
+
+            # if still no matches, replace it with a whitespace
+            chars.append(" ")
+
+        text = "".join(chars)
+
+        # Lowercase everything
         text: str = text.lower()
+        #print(f"text before regex:\n{text}")
 
-        # remove accents marks and other non ASCII
-        text = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('ASCII')
+        # Remove ill escapes
+        text = re.sub(r'\\', "", text)
 
-        # replace any of these with whitespace
-        text = re.sub(r'[,*(|)!?:\\/&;]', " ", text)
+        # Remove tech-safe punctuation marks
+        text = re.sub(r'[*(|)!?:/;,]', " ", text)
 
-        # replace dot wrapped by spaces
-        text = re.sub(r'(?<!\w)\.|\.(?!\w)', " ", text)
+        # Remove other standalone punctuation that is not between word characters
+        text = re.sub(r'(?<!\w)[.#+-](?!\w)', " ", text)
 
-        # replace if leaded by a whitespace
-        text = re.sub(r'\s[#+](?=[a-zA-Z0-9])', " ", text)
+        # Remove common, tech-safe leading symbols for word characters
+        text = re.sub(r'\s[.#+-](?=[a-zA-Z0-9])', " ", text)
 
-        # replace any dot followed by a whitespace
-        text = re.sub(r'(?<=\S)\.+(?=\s|$)', " ", text)
+        # Remove trailing punctuation leaded by any char and trailed by white space
+        text = re.sub(r'(?<=\w)[.,](?=\s|$)', " ", text)
 
-        # replace dashes if they are leaded by a whitespace
-        text = re.sub(r'\s-(?=[a-zA-Z])', " ", text)
-
-        # collapse n whitespaces into a single whitespace
+        # Collapse multiple whitespaces into single space
         text = re.sub(r'\s+', " ", text)
 
-        # strip whitespace from the edges
+        # Strip whitespace from edges
         text = text.strip()
 
         return text

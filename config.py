@@ -17,6 +17,7 @@ def to_namespace(d):
 # config with namespace mapping for access with dot notation
 config = to_namespace({
     "data_dir": data_dir,
+    "debug_dir": data_dir.joinpath("debug"),
     "topics": base_dir.joinpath("topics"),
     "mode": {"dev": False},
     "mappings": {

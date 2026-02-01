@@ -1,12 +1,9 @@
-from PIL.ImageChops import difference
-
 from dynamic_listing_factory import DynamicListingFactory
 from dynamic_listing import DynamicListing
 from mappings_loader import MappingsLoader
 from text_processor import TextProcessor
 from collections import Counter
 from datetime import datetime
-from listing import Listing
 from session import Session
 from config import config
 from topic import Topic
@@ -30,21 +27,73 @@ class Processor:
 
     def __init__(self, session: Session, topics: list[Topic]) -> None:
         self._session = session
-        self.topics = topics
+        self._topics = topics
 
     def process(self) -> Any:
+        actual_start = datetime.now()
+        print(f"\nStarting pipeline at: {str(actual_start)[:-3]}\n")
+
         start = datetime.now()
         self.build_listings()
-        self.sanitize_listings()
-        self.extract_ngrams()
-        self.deduplicate()
-        self.extract_job_level()
-        self.match_and_count()
-        self.update_totals()
-        #self.build_results()
         end = datetime.now()
         delta = end - start
-        print(f"Process took: {str(delta)[:-3]}")
+        print(f"Build Listings took: {str(delta)[:-3]}")
+
+        start = datetime.now()
+        self.sanitize_listings()
+        end = datetime.now()
+        delta = end - start
+        print(f"Sanitation took: {str(delta)[:-3]}")
+
+        start = datetime.now()
+        self.extract_ngrams()
+        end = datetime.now()
+        delta = end - start
+        print(f"Ngram Extraction took: {str(delta)[:-3]}")
+
+        start = datetime.now()
+        self.deduplicate()
+        end = datetime.now()
+        delta = end - start
+        print(f"Deduplication took: {str(delta)[:-3]}")
+
+        start = datetime.now()
+        self.extract_job_level()
+        end = datetime.now()
+        delta = end - start
+        print(f"Job Level inference took: {str(delta)[:-3]}")
+
+        start = datetime.now()
+        self.match_and_count()
+        end = datetime.now()
+        delta = end - start
+        print(f"Matching took: {str(delta)[:-3]}")
+
+        start = datetime.now()
+        self.update_totals()
+        end = datetime.now()
+        delta = end - start
+        print(f"Counting took: {str(delta)[:-3]}")
+
+        #self.build_results()
+
+        final_end = datetime.now()
+        print(f"\nFinished at: {str(final_end)[:-3]}")
+
+        final_delta = final_end - actual_start
+        print(f"\nEntire pipeline took: {str(final_delta)[:-3]}")
+        print(f"Processed Listings: {len(self._session.listings)}")
+        print(f"Unique Listings: {len(self._listings)}")
+
+        total_words = 0
+        for index, topic in enumerate(self._topics):
+            for term in topic.terms.items():
+                for variation in term:
+                    total_words += 1
+
+        print(f"Processed Topics: {len(self._topics)}")
+        print(f"Matched words: {total_words}")
+
         with open("counts.json", "w") as f:
             json.dump(self._buckets, f, indent=4)
 
@@ -105,7 +154,6 @@ class Processor:
         for index in duplicates:
             self._listings.pop(index)
 
-
         end = datetime.now()
         delta = end - start
 
@@ -122,7 +170,7 @@ class Processor:
                 continue
 
             # process against topics
-            for topic in self.topics:
+            for topic in self._topics:
                 matched_terms = TextProcessor.find_matches(_ngrams, topic.terms)
 
                 # update deepest bucket
@@ -213,7 +261,7 @@ class Processor:
 
     def update_totals(self) -> None:
         global_matches = self._buckets["total"]["matches_counter"]
-        for topic in self.topics:
+        for topic in self._topics:
             topic_bucket = self._buckets[topic.title]
             for level_data in topic_bucket["per_level"].values():
                 topic_bucket["listings_counter"] += level_data["listings_counter"]
@@ -243,7 +291,7 @@ class Processor:
         }
 
         # dynamically generate buckets for each topic
-        for topic in self.topics:
+        for topic in self._topics:
             self._buckets[topic.title] = {
                 "listings_counter": 0,
                 "matches_counter": Counter(),
@@ -271,12 +319,11 @@ class Processor:
 
     def _debug_dump(
             self,
-            ngrams: bool = False,
             session: bool = False,
             topics: bool = False,
             listings: bool = False,
-            indexed_job_levels: bool = False,
-            indexed_ngrams: bool = False,
+            job_levels: bool = False,
+            ngrams: bool = False,
             buckets: bool = False,
             include_raw: bool = False,
             full: bool = False,
@@ -286,79 +333,154 @@ class Processor:
             pass
 
         timestamp = datetime.now()
-        _filename = f"debug_dump_{timestamp.strftime("%Y%m%d_%H%M%S")}.json"
-
-        print(f"DEBUG: Dumping Processor state at {config.data_dir}")
-
-        _dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "metrics": self._metrics}
+        dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "metrics": self.metrics}
+        _master_filename = f"debug_dump_{timestamp.strftime("%Y%m%d_%H%M%S")}.json"
+        with open(config.debug_dir.joinpath(_master_filename), "w") as out:
+            json.dump(dump, out, indent=2)
 
         # session update
         if session or full:
-            _dump["session"] = {}
+            dump_type = "session"
+            dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
 
             if not self._session:
-                _dump["session"] = "Not Assigned"
+                dump["session"] = "Not Assigned"
 
             else:
-                _dump["session"] = {
+                dump["session"] = {
                     "id": self._session.id,
                     "title": self._session.title,
                     "description": self._session.description,
                     "start_time": self._session.start_time.isoformat(),
                     "finish_time": self._session.finish_time.isoformat(),
                     "meta": self._session.meta,
-                    "listings": len(self._session.raw_listings),
+                    "listings": len(self._session.listings),
                 }
+
+            with open(config.debug_dir.joinpath(_filename), "w") as out:
+                json.dump(dump, out, indent=2)
 
         # dump topics loaded
         if topics or full:
-            _dump["topics"] = {}
+            dump_type = "topics"
+            dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
 
             if not self._topics:
-                _dump["topics"] = "Not Assigned"
+                dump["topics"] = "Not Assigned"
             else:
-                for index, topic in enumerate(self.topics):
-                    _dump["topics"][index] = {
+                dump["topics"] = {}
+                for index, topic in enumerate(self._topics):
+                    dump["topics"][index] = {
                         "title": topic.title,
                         "description": topic.description,
                         "terms": topic.terms,
                     }
 
+            with open(config.debug_dir.joinpath(_filename), "w") as out:
+                json.dump(dump, out, indent=2)
+
         # dump processed listings
         if listings or full:
-            _dump["listings"] = {}
+            dump_type = "listings"
+            dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
 
             if not self._listings:
-                _dump["listings"] = "Not Assigned"
+                dump["listings"] = "Not Assigned"
 
             else:
+                dump["listings"] = {}
                 for index, _listing in self._listings.items():
-                    _dump["listings"][index]= {
+                    dump["listings"][index]= {
                         "id": _listing.id,
                         "title": _listing.title,
                         "job_level": _listing.job_level,
                         "description": _listing.description,
                         "external_id": _listing.external_id,
-                        "raw_data": json.loads(self._session.raw_listings[index]),
                     }
+
+            with open(config.debug_dir.joinpath(_filename), "w") as out:
+                json.dump(dump, out, indent=2)
 
         # dump indexed ngrams
-        if ngrams:
-            for key, value in self.indexed_ngrams.items():
-                _dump["indexed_ngrams"][key] = ({
-                    "listing_id": key,
-                    "words": {
-                        "count": len(value),
-                        "bags": {
-                            "unigrams": list(value["unigrams"]),
-                            "bigrams": list(value["bigrams"]),
-                            "ngrams": list(value["ngrams"]),
+        if ngrams or full:
+            dump_type = "ngrams"
+            dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+
+            if not self._indexed_ngrams:
+                dump["ngrams"] = "Not Assigned"
+            else:
+                dump["ngrams"] = {}
+                for index, bags in self._indexed_ngrams.items():
+                    dump["ngrams"][index] = {
+                        "listing_id": index,
+                        "ngrams": list(bags["ngrams"]),
+                        "title": {
+                            "unigrams": list(bags["title"]["unigrams"]),
+                            "bigrams": list(bags["title"]["bigrams"]),
+                            "ngrams": list(bags["title"]["ngrams"]),
+                        },
+                        "description": {
+                            "unigrams": list(bags["description"]["unigrams"]),
+                            "bigrams": list(bags["description"]["bigrams"]),
+                            "ngrams": list(bags["description"]["ngrams"]),
                         }
                     }
-                })
 
-        # save to data path
-        with open(config.data_dir.joinpath("debug.json"), "w") as out:
-            json.dump(_dump, out, indent=2)
-        with open(config.data_dir.joinpath("counts.json"), "w") as out:
-            json.dump(self.buckets, out, indent=2)
+            with open(config.debug_dir.joinpath(_filename), "w") as out:
+                json.dump(dump, out, indent=2)
+
+        if job_levels or full:
+            dump_type = "job_levels"
+            dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+
+            if not self._indexed_job_level:
+                dump["job_levels"] = "Not Assigned"
+            else:
+                dump["job_levels"] = {}
+                for index, listing in self._listings.items():
+                    dump["job_levels"][index] = {
+                        "original": listing.job_level,
+                        "inferred": self._indexed_job_level[str(index)]
+                    }
+
+            with open(config.debug_dir.joinpath(_filename), "w") as out:
+                json.dump(dump, out, indent=2)
+
+        if buckets or full:
+            dump_type = "buckets"
+            dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+
+            if not self._buckets:
+                dump["buckets"] = "Not Assigned"
+            else:
+                dump["buckets"] = self._buckets
+
+            with open(config.debug_dir.joinpath(_filename), "w") as out:
+                json.dump(dump, out, indent=2)
+
+        if include_raw or full:
+            dump_type = "raw_listings"
+            dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+
+            if not self._session:
+                dump["raw_listings"] = "Not Assigned"
+            else:
+                dump["raw_listings"] = {}
+                for index, _listing in self._session.listings.items():
+                    dump["raw_listings"][index]= {
+                        "id": _listing.id,
+                        "session_id": _listing.session_id,
+                        "json": json.loads(_listing.raw_data)
+                    }
+
+            with open(config.debug_dir.joinpath(_filename), "w") as out:
+                json.dump(dump, out, indent=2)
+
+        print(f"DEBUG: Finished Debug Dump. Dumped Processor state at {_master_filename}.")

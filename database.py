@@ -1,3 +1,5 @@
+from typing import Any
+
 from listing import Listing
 from session import Session
 from config import config
@@ -84,6 +86,17 @@ class Database:
         cursor.close()
         return {int(row["id"]): Listing.from_row(row) for row in rows} if rows else {}
 
+    def get_one_listing(self, listing_id) -> Listing | None:
+        """retrieves a listing"""
+        sql = "SELECT * FROM listings WHERE id = ?"
+        cursor = self.conn.cursor()
+        cursor.execute(sql, (listing_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+        cursor.close()
+        return Listing.from_row(row)
+
     # only called within save_session, no commit required
     def save_listings(self, listings: list[dict[str, str]]) -> int:
         """Saves a listing to the database. Commit is done by save_session"""
@@ -94,3 +107,10 @@ class Database:
         cursor.close()
 
         return listing_id
+
+    def _query(self, query: str) -> dict[Any, Any]:
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
+        return {index: {**row} for index, row in enumerate(rows)}
