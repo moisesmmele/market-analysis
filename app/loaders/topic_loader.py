@@ -1,7 +1,7 @@
-from config import config
-from topic import Topic
-from typing import Any
 import json
+
+from app.entities import Topic
+from app import config
 
 class TopicLoader:
 
@@ -15,7 +15,8 @@ class TopicLoader:
     @classmethod
     def load(cls) -> None:
         cls._LOADED_TOPICS: dict[int, Topic] = {}
-        files = sorted(config.topics.glob("*.json"))
+        topics_dir = config.resources.topics
+        files = sorted(topics_dir.glob("*.json"))
         for index, file in enumerate(files):
             with open(file, "r", encoding='utf-8') as f:
                 cls._LOADED_TOPICS[index] = Topic(**json.load(f))

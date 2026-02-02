@@ -1,6 +1,10 @@
 .git
+
 .venv
+.data
+.debug
 __pycache__
+
 *.pyc
 .idea
 .vscode

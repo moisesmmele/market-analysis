@@ -1,14 +1,17 @@
-from mappings_loader import MappingsLoader
-from dynamic_listing import DynamicListing
+from app.entities import DynamicListing
+from app.loaders import MappingsLoader
 from typing import Any
 import json
 
 class DynamicListingFactory:
 
     @staticmethod
-    def create(listing_id: int, raw_data: str) -> DynamicListing:
+    def create(listing_id: int, raw_data: str) -> DynamicListing|None:
 
         mappings: dict[str, dict[str, Any]] = MappingsLoader.get_mappings()
+        if not mappings:
+            raise Exception("Mappings were not loaded")
+
         provider_map: dict[str, Any] = mappings["provider"]
         platform_map: dict[str, Any] = mappings["platform"]
 
@@ -21,12 +24,16 @@ class DynamicListingFactory:
 
         for canonical_field in valid_keys:
             # get provider-specific field name
-            provider_field = provider_map.get("fields").get(canonical_field)
-            if provider_field is None:
+            provider_field_mappings = provider_map.get("fields")
+            if not provider_field_mappings:
+                raise Exception("Could not load mappings")
+
+            provider_field = provider_field_mappings.get(canonical_field)
+            if not provider_field:
                 continue
 
             # get the value from parsed data
-            value = parsed_listing_data.get(provider_field)
+            value: str|int = parsed_listing_data.get(provider_field)
             if value is None:
                 continue
 

@@ -1,7 +1,7 @@
-from jobspy_normalizer import JobspyNormalizer
+from app.legacy.jobspy_normalizer import JobspyNormalizer
 from jobspy import scrape_jobs
-from database import Database
-from session import Session
+from app.persistence.database import Database
+from app.entities.session import Session
 from typing import List, Set
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed

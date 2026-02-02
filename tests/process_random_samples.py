@@ -1,9 +1,11 @@
-from topic_loader import TopicLoader
-from processor import Processor
+from app.persistence import Database
+from app.loaders import TopicLoader
+from app.entities import Session
+from app.core import Processor
+
 from datetime import datetime
-from database import Database
-from session import Session
 from random import random
+
 
 def get_random_listing(database: Database, multiplier):
     random_id = int(random() * multiplier)
@@ -11,7 +13,6 @@ def get_random_listing(database: Database, multiplier):
     if not listing:
         return get_random_listing(database, multiplier)
     return listing
-
 
 topics = TopicLoader.get_available()
 #selected_topics = []
@@ -30,11 +31,11 @@ session.meta = {"lorem": "ipsum", "foo": "bar"}
 
 max_listings = db._query("SELECT COUNT(*) as count FROM listings")[0]["count"]
 
-max_listing_samples = 20
+max_samples = 10
 session.listings = {
     listing.id: listing
     for listing
-    in (get_random_listing(db, max_listings) for _ in range(max_listing_samples))
+    in (get_random_listing(db, max_listings) for _ in range(max_samples))
 }
 
 processor = Processor(session, random_topic)

@@ -1,10 +1,9 @@
 from typing import Any
-
-from listing import Listing
-from session import Session
-from config import config
 import sqlite3
 import json
+
+from app.entities import Session, Listing
+from app import config
 
 # Can be refactored into a Repository and Driver if needed
 # Atm it's fine to handle both in a single class

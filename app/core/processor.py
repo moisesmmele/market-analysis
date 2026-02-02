@@ -1,26 +1,28 @@
-from dynamic_listing_factory import DynamicListingFactory
-from dynamic_listing import DynamicListing
-from mappings_loader import MappingsLoader
-from text_processor import TextProcessor
 from collections import Counter
 from datetime import datetime
-from session import Session
-from config import config
-from topic import Topic
+from pathlib import Path
 from typing import Any
 import json
 
+from app.entities import DynamicListing, Session, Topic, Metric
+from app.components import DynamicListingFactory
+from app.components import TextProcessor
+from app.loaders import MappingsLoader
+from app import config
+from enums import InfoType
+
+
 class Processor:
 
-    _indexed_ngrams = None
-    _indexed_job_level: dict[str, list] = None
+    _ngrams = None
+    _job_levels: dict[str, list] = None
     _buckets: dict[str, dict[str, Any]] = None
     _listings: dict[int, DynamicListing] = None
+    _metrics: dict[str, Metric] = None
     _topics: list[Topic] = None
     _session: Session = None
 
     results: list[dict[str, Any]] = None
-    metrics: dict[str, dict[str, str]] = None
 
     # TODO: 1. IMPLEMENT BOOL OR METRICS RETURNS FOR EVERY METHOD THAT RETURNS NONE / HAS EFFECT / CHANGES STATE
     # TODO: 2. IMPLEMENT GUARD CLAUSES / EARLY RETURN ON PROCESS METHOD
@@ -28,84 +30,35 @@ class Processor:
     def __init__(self, session: Session, topics: list[Topic]) -> None:
         self._session = session
         self._topics = topics
+        self._metrics = dict()
 
-    def process(self) -> Any:
-        actual_start = datetime.now()
-        print(f"\nStarting pipeline at: {str(actual_start)[:-3]}\n")
+    def process(self) -> Metric:
+        metric = Metric("process")
 
-        start = datetime.now()
         self.build_listings()
-        end = datetime.now()
-        delta = end - start
-        print(f"Build Listings took: {str(delta)[:-3]}")
-
-        start = datetime.now()
         self.sanitize_listings()
-        end = datetime.now()
-        delta = end - start
-        print(f"Sanitation took: {str(delta)[:-3]}")
-
-        start = datetime.now()
         self.extract_ngrams()
-        end = datetime.now()
-        delta = end - start
-        print(f"Ngram Extraction took: {str(delta)[:-3]}")
-
-        start = datetime.now()
         self.deduplicate()
-        end = datetime.now()
-        delta = end - start
-        print(f"Deduplication took: {str(delta)[:-3]}")
-
-        start = datetime.now()
         self.extract_job_level()
-        end = datetime.now()
-        delta = end - start
-        print(f"Job Level inference took: {str(delta)[:-3]}")
-
-        start = datetime.now()
         self.match_and_count()
-        end = datetime.now()
-        delta = end - start
-        print(f"Matching took: {str(delta)[:-3]}")
-
-        start = datetime.now()
         self.update_totals()
-        end = datetime.now()
-        delta = end - start
-        print(f"Counting took: {str(delta)[:-3]}")
-
         #self.build_results()
 
-        final_end = datetime.now()
-        print(f"\nFinished at: {str(final_end)[:-3]}")
+        metric.success()
+        metric.append_info("total_steps", 7)
+        return self.append_metric(metric)
 
-        final_delta = final_end - actual_start
-        print(f"\nEntire pipeline took: {str(final_delta)[:-3]}")
-        print(f"Processed Listings: {len(self._session.listings)}")
-        print(f"Unique Listings: {len(self._listings)}")
+    def deduplicate(self) -> Metric:
+        metric = Metric("deduplicate")
 
-        total_words = 0
-        for index, topic in enumerate(self._topics):
-            for term in topic.terms.items():
-                for variation in term:
-                    total_words += 1
-
-        print(f"Processed Topics: {len(self._topics)}")
-        print(f"Matched words: {total_words}")
-
-        with open("counts.json", "w") as f:
-            json.dump(self._buckets, f, indent=4)
-
-    def deduplicate(self):
         duplicates = set()
         processed = 0
         iterations = 0
-        start = datetime.now()
+
         for index_a, listing_a in self._listings.items():
             processed += 1
             # cache reference for set_a outside the inner loop
-            unigrams_a = self._indexed_ngrams[index_a].get("description").get("unigrams")
+            unigrams_a = self._ngrams[index_a].get("description").get("unigrams")
             for index_b, listing_b in self._listings.items():
                 iterations += 1
 
@@ -123,7 +76,7 @@ class Processor:
                     duplicates.add(index_b)
                     continue
 
-                unigrams_b = self._indexed_ngrams[index_b].get("description").get("unigrams")
+                unigrams_b = self._ngrams[index_b].get("description").get("unigrams")
 
                 # get the size of intersection A in B
                 intersection_count = len(unigrams_a & unigrams_b)
@@ -154,38 +107,72 @@ class Processor:
         for index in duplicates:
             self._listings.pop(index)
 
-        end = datetime.now()
-        delta = end - start
+        metric.success()
+        metric.append_info("duplicates", len(duplicates))
+        metric.append_info("iterations", iterations)
+        metric.append_info("processed", processed)
+        return self.append_metric(metric)
 
-    def match_and_count(self) -> None:
-        # initialize buckets
+    def match_and_count(self) -> Metric:
+        metric = Metric("match_and_count")
+
         self.generate_buckets()
 
-        # iterate over listings
+        iterations = 0
+        processed = 0
+
+        if not self._ngrams:
+            metric.failure()
+            metric.append_info("failure", "No ngrams available")
+            return self.append_metric(metric)
+
+        if not self._topics:
+            metric.failure()
+            metric.append_info("failure", "No topics available")
+            return self.append_metric(metric)
+
         for index, _listing in self._listings.items():
             # get ngrams for current listing
-            _ngrams: set[str] = self._indexed_ngrams[index]["ngrams"]
-
+            _ngrams: set[str] = self._ngrams[index]["ngrams"]
             if not _ngrams:
+                message = {"message": f"No ngrams available for listing {index}"}
+                metric.append_info("info", message, InfoType.WARNING)
                 continue
-
+            matches = 0
             # process against topics
             for topic in self._topics:
                 matched_terms = TextProcessor.find_matches(_ngrams, topic.terms)
-
-                # update deepest bucket
+                iterations += 1
                 if matched_terms:
-                    mutated_job_level = self._indexed_job_level.get(_listing.id)
-                    self.update_buckets(topic.title, mutated_job_level, matched_terms)
+                    matches += 1
+                # update deepest bucket
+                mutated_job_level = self._job_levels.get(_listing.id)
+                self.update_buckets(topic.title, mutated_job_level, matched_terms)
+
+            if matches == 0:
+                message = f"No matches for listing {_listing.id}"
+                metric.append_info("message", message, InfoType.WARNING)
+                continue
+
+            processed += 1
             self.listing_processed()
 
-    def extract_ngrams(self) -> None:
-        # Note: currently this is too manual for my taste, need to abstract
-        if not self._listings:
-            pass
+        metric.success()
+        metric.append_info("processed", processed)
+        metric.append_info("iterations", iterations)
+        return self.append_metric(metric)
 
-        self._indexed_ngrams = {}
-        _metrics = {"processed": 0}
+    def extract_ngrams(self) -> Metric:
+        # Note: currently this is too manual for my taste, need to abstract
+        metric = Metric("extract_ngrams")
+
+        if not self._listings:
+            metric.failure()
+            metric.append_info("failure", f"No listings to extract ngrams for")
+            return self.append_metric(metric)
+
+        self._ngrams = {}
+        processed: int = 0
         for index, _listing in self._listings.items():
 
             title = TextProcessor.remove_stopwords(_listing.title)
@@ -200,7 +187,7 @@ class Processor:
 
             combined_ngrams: set[str] = title_ngrams | description_ngrams
 
-            self._indexed_ngrams[index] = {
+            self._ngrams[index] = {
                 "title": {
                     "unigrams": title_unigrams,
                     "bigrams": title_bigrams,
@@ -213,60 +200,102 @@ class Processor:
                 },
                 "ngrams": combined_ngrams,
             }
-            _metrics["processed"] += 1
-        return _metrics
 
-    def extract_job_level(self) -> dict[str, Any]:
+            processed += 1
+
+        metric.success()
+        metric.append_info("processed", processed)
+        return self.append_metric(metric)
+
+    def extract_job_level(self) -> Metric:
+        metric = Metric("extract_job_level")
+
         mappings = MappingsLoader.get_mappings()
+        if not mappings:
+            metric.failure()
+            metric.append_info("failure", "No mappings available")
+            return self.append_metric(metric)
+
         job_levels = mappings["canonical"].get("job_level")
+        if not job_levels:
+            metric.failure()
+            metric.append_info("failure", "No job levels available")
+            return self.append_metric(metric)
 
-        self._indexed_job_level: dict[str, str] = {}
+        if not self._listings:
+            metric.failure()
+            metric.append_info("failure", "No listings available")
+            return self.append_metric(metric)
 
-        _metrics = {"processed": 0, "mutations": 0}
+        self._job_levels: dict[str, str] = {}
+
+        processed: int = 0
+        iterations: int = 0
+        mutations: int = 0
         for _index, _listing in self._listings.items():
-            self._indexed_job_level[_listing.id] = _listing.job_level
+            # default to current value
+            self._job_levels[_listing.id] = _listing.job_level
 
-            if job_levels:
-                title_tokens = _listing.title.split()
+            title_tokens = _listing.title.split()
 
-                # Iterate over levels; Use reversed to respect hierarchy
-                found = False
-                for canonical in reversed(list(job_levels.keys())):
-                    variations = set(job_levels[canonical])
-                    for variation in variations:
-                        if variation in title_tokens:
-                            self._indexed_job_level[_listing.id] = canonical
-                            if config.mode.dev:
-                                print(f'found match for '
-                                      f'"{canonical}" -> "{variation}" '
-                                      f'in {_listing.id}: "{" ".join(title_tokens)}"')
-                            found = True
-                            _metrics["mutations"] += 1
-                            break
-                    if found:
+            # Iterate over levels; Use reversed to respect hierarchy
+            found = False
+            for canonical in reversed(list(job_levels.keys())):
+                variations = set(job_levels[canonical])
+                for variation in variations:
+                    iterations += 1
+                    if variation in title_tokens:
+                        self._job_levels[_listing.id] = canonical
+                        found = True
+                        mutations += 1
                         break
-            _metrics["processed"] += 1
-            if config.mode.dev:
-                print(_metrics)
-        return _metrics
+                if found:
+                    break
+            processed += 1
 
-    def build_listings(self) -> None:
+        metric.success()
+        metric.append_info("processed", processed)
+        metric.append_info("mutations", mutations)
+        metric.append_info("iterations", iterations)
+        return self.append_metric(metric)
+
+    def build_listings(self) -> Metric:
+        metric = Metric("build_listings")
         if not self._session:
-            pass
+            metric.failure()
+            metric.append_info("failure", "No session available")
+            return self.append_metric(metric)
 
         self._listings: dict[int, DynamicListing] = {}
 
+        processed: int = 0
         for index, listing in self._session.listings.items():
             self._listings[index] = DynamicListingFactory.create(index, listing.raw_data)
+            processed += 1
 
-    def update_totals(self) -> None:
+        metric.success()
+        metric.append_info("processed", processed)
+        metric.append_info("created", len(self._listings))
+        return self.append_metric(metric)
+
+    def update_totals(self) -> Metric:
+        metric = Metric("update_totals")
+        if not self._buckets:
+            metric.failure()
+            metric.append_info("failure", "No buckets available")
+            return self.append_metric(metric)
+
+        processed: int = 0
         global_matches = self._buckets["total"]["matches_counter"]
         for topic in self._topics:
             topic_bucket = self._buckets[topic.title]
             for level_data in topic_bucket["per_level"].values():
                 topic_bucket["listings_counter"] += level_data["listings_counter"]
                 topic_bucket["matches_counter"].update(level_data["matches_counter"])
+                processed += 1
             global_matches.update(topic_bucket["matches_counter"])
+        metric.success()
+        return self.append_metric(metric)
 
     def listing_processed(self) -> None:
         self._buckets["total"]["listings_counter"] += 1
@@ -276,11 +305,25 @@ class Processor:
         pass
 
     def generate_buckets(self):
-
+        metric = Metric("generate_buckets")
         # get available job level mappings
         mappings: dict = MappingsLoader.get_mappings()
+        if not mappings:
+            metric.failure()
+            metric.append_info("failure", "No mappings available")
+            return self.append_metric(metric)
+
         canonical_mappings: dict = mappings.get("canonical")
+        if not canonical_mappings:
+            metric.failure()
+            metric.append_info("failure", "No canonical mappings available")
+            return self.append_metric(metric)
+
         job_levels: dict = canonical_mappings.get("job_level", {})
+        if not job_levels:
+            metric.failure()
+            metric.append_info("failure", "No job levels available")
+            return self.append_metric(metric)
 
         # initialize buckets with total counter
         self._buckets = {
@@ -290,6 +333,7 @@ class Processor:
             }
         }
 
+        processed: int = 0
         # dynamically generate buckets for each topic
         for topic in self._topics:
             self._buckets[topic.title] = {
@@ -304,18 +348,35 @@ class Processor:
                     "listings_counter": 0,
                     "matches_counter": Counter()
                 }
+                processed += 1
+
+        metric.success()
+        metric.append_info("processed", processed)
+        return self.append_metric(metric)
 
     def update_buckets(self, topic: str, job_level, matches: set[str]) -> None:
         self._buckets[topic]["per_level"][job_level]["listings_counter"] += 1
         self._buckets[topic]["per_level"][job_level]["matches_counter"].update(matches)
 
     def sanitize_listings(self):
+        metric = Metric("sanitize_listings")
+        processed = 0
         for index, listing in self._listings.items():
             sanitized_title = TextProcessor.sanitize(listing.title)
             listing.title = sanitized_title
 
             sanitized_description = TextProcessor.sanitize(listing.description)
             listing.description = sanitized_description
+            processed+=1
+
+        metric.success()
+        metric.append_info("processed", processed)
+        return self.append_metric(metric)
+
+    def append_metric(self, metric: Metric) -> Metric:
+        context = metric.get_context()
+        self._metrics[context] = metric
+        return metric
 
     def _debug_dump(
             self,
@@ -332,17 +393,21 @@ class Processor:
         if not config.mode.dev:
             pass
 
+        print("DEBUG: Starting debug dump...")
+        debug_dir: Path = config.dir.debug
+
         timestamp = datetime.now()
-        dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "metrics": self.metrics}
-        _master_filename = f"debug_dump_{timestamp.strftime("%Y%m%d_%H%M%S")}.json"
-        with open(config.debug_dir.joinpath(_master_filename), "w") as out:
+        metrics = {index: metric.to_dict() for index, metric in self._metrics.items()}
+        dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "metrics": metrics}
+        _master_filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_processor_debug_dump.json"
+        with open(debug_dir.joinpath(_master_filename), "w") as out:
             json.dump(dump, out, indent=2)
 
         # session update
         if session or full:
             dump_type = "session"
             dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
-            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_processor_{dump_type}.json"
 
             if not self._session:
                 dump["session"] = "Not Assigned"
@@ -358,14 +423,14 @@ class Processor:
                     "listings": len(self._session.listings),
                 }
 
-            with open(config.debug_dir.joinpath(_filename), "w") as out:
+            with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
 
         # dump topics loaded
         if topics or full:
             dump_type = "topics"
             dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
-            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_processor_{dump_type}.json"
 
             if not self._topics:
                 dump["topics"] = "Not Assigned"
@@ -378,14 +443,14 @@ class Processor:
                         "terms": topic.terms,
                     }
 
-            with open(config.debug_dir.joinpath(_filename), "w") as out:
+            with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
 
         # dump processed listings
         if listings or full:
             dump_type = "listings"
             dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
-            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_processor_{dump_type}.json"
 
             if not self._listings:
                 dump["listings"] = "Not Assigned"
@@ -401,20 +466,20 @@ class Processor:
                         "external_id": _listing.external_id,
                     }
 
-            with open(config.debug_dir.joinpath(_filename), "w") as out:
+            with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
 
         # dump indexed ngrams
         if ngrams or full:
             dump_type = "ngrams"
             dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
-            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_processor_{dump_type}.json"
 
-            if not self._indexed_ngrams:
+            if not self._ngrams:
                 dump["ngrams"] = "Not Assigned"
             else:
                 dump["ngrams"] = {}
-                for index, bags in self._indexed_ngrams.items():
+                for index, bags in self._ngrams.items():
                     dump["ngrams"][index] = {
                         "listing_id": index,
                         "ngrams": list(bags["ngrams"]),
@@ -430,44 +495,44 @@ class Processor:
                         }
                     }
 
-            with open(config.debug_dir.joinpath(_filename), "w") as out:
+            with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
 
         if job_levels or full:
             dump_type = "job_levels"
             dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
-            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_processor_{dump_type}.json"
 
-            if not self._indexed_job_level:
+            if not self._job_levels:
                 dump["job_levels"] = "Not Assigned"
             else:
                 dump["job_levels"] = {}
                 for index, listing in self._listings.items():
                     dump["job_levels"][index] = {
                         "original": listing.job_level,
-                        "inferred": self._indexed_job_level[str(index)]
+                        "inferred": self._job_levels[str(index)]
                     }
 
-            with open(config.debug_dir.joinpath(_filename), "w") as out:
+            with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
 
         if buckets or full:
             dump_type = "buckets"
             dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
-            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_processor_{dump_type}.json"
 
             if not self._buckets:
                 dump["buckets"] = "Not Assigned"
             else:
                 dump["buckets"] = self._buckets
 
-            with open(config.debug_dir.joinpath(_filename), "w") as out:
+            with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
 
         if include_raw or full:
             dump_type = "raw_listings"
             dump: dict[str, Any] = {"dumped_at": timestamp.isoformat(), "dump_type": dump_type}
-            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_debug_dump_{dump_type}.json"
+            _filename = f"{timestamp.strftime("%Y%m%d_%H%M%S")}_processor_{dump_type}.json"
 
             if not self._session:
                 dump["raw_listings"] = "Not Assigned"
@@ -480,7 +545,7 @@ class Processor:
                         "json": json.loads(_listing.raw_data)
                     }
 
-            with open(config.debug_dir.joinpath(_filename), "w") as out:
+            with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
 
-        print(f"DEBUG: Finished Debug Dump. Dumped Processor state at {_master_filename}.")
+        print(f"DEBUG: Finished Debug Dump. Dumped Processor state at {debug_dir}\\.")

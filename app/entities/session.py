@@ -3,8 +3,7 @@ from datetime import datetime
 from typing import Any
 import json
 
-from listing import Listing
-
+from app.entities.listing import Listing
 
 @dataclass
 class Session:
@@ -13,6 +12,8 @@ class Session:
     start_time: datetime = None
     finish_time: datetime = None
     listings: dict[int, Listing] = None
+    provider: str = None
+    platform: str = None
     meta: dict[str, Any] = None
     id: int = None
 

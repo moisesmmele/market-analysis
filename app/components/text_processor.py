@@ -3,10 +3,7 @@ import ftfy
 import html
 import re
 
-
-
 class TextProcessor:
-
 
     STOPWORDS: set[str] =[
         "a", "o", "e", "de", "do", "da", "em", "um", "uma", "para", "com", "por",
