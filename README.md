@@ -1,6 +1,8 @@
 # **Job Market Analysis**
 
-## WIP
+## Work In Progress
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/moisesmmele/market-analysis)
 
 ELT Pipeline & Dashboard with some very basic NLP techniques to generate insights 
 about the tech job market (or any market, really.)

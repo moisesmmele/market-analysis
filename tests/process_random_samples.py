@@ -6,7 +6,6 @@ from app.core import Processor
 from datetime import datetime
 from random import random
 
-
 def get_random_listing(database: Database, multiplier):
     random_id = int(random() * multiplier)
     listing = database.get_one_listing(random_id)
@@ -25,14 +24,14 @@ session = Session()
 session.id = int(random() * 100)
 session.title = "Random Sample Test"
 session.description = "Lorem Ipsum dolor sit amet"
-session.start_time = datetime(1970, 1, 1, 22, 59, 59)
-session.finish_time = datetime(1970, 1, 1, 23, 59, 59)
+session.date = datetime(1970, 1, 1, 22, 59, 59)
 session.meta = {"lorem": "ipsum", "foo": "bar"}
+session.add_subsession('synthetic search term')
 
 max_listings = db._query("SELECT COUNT(*) as count FROM listings")[0]["count"]
 
-max_samples = 10
-session.listings = {
+max_samples = 100
+session.subsessions[1].listings = {
     listing.id: listing
     for listing
     in (get_random_listing(db, max_listings) for _ in range(max_samples))

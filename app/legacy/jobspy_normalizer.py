@@ -1,4 +1,4 @@
-from app.entities.dynamic_listing import Listing
+from app.entities.listing import Listing
 import pandas as pd
 import json
 

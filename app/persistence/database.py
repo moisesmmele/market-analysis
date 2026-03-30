@@ -1,14 +1,12 @@
+from datetime import datetime
 from typing import Any
 import sqlite3
 import json
 
 from app.entities import Session, Listing
+from enums import SubsessionStatus
+from entities import Subsession
 from app import config
-
-# Can be refactored into a Repository and Driver if needed
-# Atm it's fine to handle both in a single class
-# Since we are using st.cache, which acts as a singleton/resource locator,
-# And the database is sqlite, there is no need to close conns
 
 class Database:
     conn: sqlite3.Connection
@@ -22,45 +20,83 @@ class Database:
         self.provision()
 
     def provision(self) -> None:
-        """execute the schema.sql file to ensure proper config and table creation"""
-
         with open(config.database.schema, 'r') as f:
             schema_sql = f.read()
-
         self.conn.executescript(schema_sql).close()
         self.conn.commit()
 
-    def get_index(self) -> dict[int, str]:
-        """Returns an index dict, since get_session is recursive (fetches all listings)"""
-
-        # language=sql
-        subquery = "(SELECT COUNT(*) FROM listings WHERE listings.session_id = sessions.id) as listings_count"
-        query = f"SELECT id, title, {subquery} FROM sessions ORDER BY id DESC"
+    def get_index(self) -> dict[int, dict]:
+        query = f"""
+                SELECT  
+                        sessions.id                 AS session_id,
+                        sessions.id                 AS session_id,
+                        sessions.title              AS session_title,
+                        sessions.description        AS session_description,
+                        sessions.provider           AS session_provider,
+                        sessions.platform           AS session_platform,
+                        sessions.date               AS date,
+                        subsessions.id              AS subsession_id,
+                        subsessions.search_term     AS search_term,
+                        (SELECT COUNT(*) 
+                            FROM listings 
+                            WHERE listings.subsession_id = subsessions.id)                
+                                                    AS listings_count
+                
+                FROM sessions
+                    LEFT JOIN subsessions 
+                    ON subsessions.session_id = sessions.id
+                
+                ORDER BY sessions.id DESC
+                """
 
         rows = (self.conn.cursor()).execute(query).fetchall()
-        return {row['id']: {"title": row['title'], "listings": row["listings_count"]} for row in rows} if rows else {}
 
-    def save_session(self, session: Session) -> int:
-        """Saves a new session and its listings, only commit after every listing is saved"""
+        results = {}
+        for row in rows:
+            session_id = row['session_id']
 
-        sql = "INSERT INTO sessions (title, description, datetime_start, datetime_finish, meta) VALUES (?, ?, ?, ?, ?)"
-        params = (session.title, session.description, session.start_time, session.finish_time, json.dumps(session.meta))
+            if session_id not in results:
+                results[session_id] = {
+                    "title": row['session_title'],
+                    "description": row['session_description'],
+                    "provider": row['session_provider'],
+                    "platform": row['session_platform'],
+                    "date": datetime.fromisoformat(row['date']).date().isoformat(),
+                    "subsessions": [],
+                    "subsession_count": 0,
+                    "listings_count": 0
+                }
 
+            if row['subsession_id'] is not None:
+                results[session_id]["subsessions"].append({
+                    "search_term": row['search_term'],
+                    "listings": row['listings_count']
+                })
+
+        for session_id in results:
+            results[session_id]["subsession_count"] = len(results[session_id]["subsessions"])
+            for subsession in results[session_id]["subsessions"]:
+                results[session_id]["listings_count"] += subsession["listings"]
+
+        return results
+
+    def get_pending(self, session_id: int) -> dict[int, Subsession]:
+        status = SubsessionStatus.pending
+        query = "SELECT * FROM subsessions WHERE session_id = ? AND status = ?"
+        params = (session_id, status)
         cursor = self.conn.cursor()
-        session_id: int = cursor.execute(sql, params).lastrowid
+        rows = cursor.execute(query, params).fetchall()
+        return {row['id']: Subsession.from_row(dict(**row)) for row in rows} if rows else {}
+
+    def get_last_session_id(self) -> int|None:
+        sql = "SELECT MAX(id) as last FROM sessions"
+        cursor = self.conn.cursor()
+        row = cursor.execute(sql).fetchone()
         cursor.close()
-
-        self.save_listings(session.raw_listings)
-
-        # Commit transaction
-        self.conn.commit()
-
-        return session_id
+        return row['last'] if row['last'] else None
 
     def get_session(self, session_id) -> Session | None:
-        """Retrieves a session with its listings from the database"""
-
-        sql = "SELECT * FROM sessions WHERE id = ? ORDER BY datetime_start DESC"
+        sql = "SELECT * FROM sessions WHERE id = ? ORDER BY date DESC"
         params = (session_id,)
 
         cursor = self.conn.cursor()
@@ -70,17 +106,69 @@ class Database:
         if row is None:
             return None
 
-        session = Session.from_row(dict(row))
-        session.listings = {i: l for i, l in self.get_listings(session_id).items()}
+        return Session.from_row(dict(row), self.get_subsessions(session_id))
 
+
+    def save_session(self, session: Session) -> Session:
+        sql = """
+              INSERT INTO sessions 
+                  (title, description, provider, platform, date, meta) 
+              VALUES (?, ?, ?, ?, ?, ?)
+              """
+        params = (session.title, session.description, session.provider,
+                  session.platform, session.date,
+                  json.dumps(session.meta))
+
+        cursor = self.conn.cursor()
+        session_id: int = cursor.execute(sql, params).lastrowid
+        cursor.close()
+
+        for index in session.subsessions:
+            subs_id = self.save_subsession(session_id, session.subsessions[index])
+            session.subsessions[index].id = subs_id
+
+        # Commit transaction
+        self.conn.commit()
+        session.id = session_id
         return session
 
-    def get_listings(self, session_id) -> dict[int, Listing]:
-        """retrieves listings for a given session"""
-
-        sql = "SELECT * FROM listings WHERE session_id = ?"
+    def get_subsessions(self, session_id: int) -> dict[int, Subsession]:
+        query = "SELECT * FROM subsessions WHERE session_id = ?"
+        params = (session_id,)
         cursor = self.conn.cursor()
-        cursor.execute(sql, (session_id,))
+        rows = cursor.execute(query, params).fetchall()
+        cursor.close()
+        subsessions = {}
+        for row in rows:
+            subsession = Subsession.from_row(row)
+            subsession.listings = self.get_listings(subsession.id)
+            subsessions[row['id']] = subsession
+
+        return subsessions
+
+    def save_subsession(self, session_id: int, subsession: Subsession) -> int:
+        """Saves a subsession"""
+        sql = "INSERT INTO subsessions (session_id, search_term, start_date, status) VALUES (?, ?, ?, ?)"
+        params = (session_id, subsession.search_term, subsession.start_date, subsession.status)
+        cursor = self.conn.cursor()
+        subsession_id = cursor.execute(sql, params).lastrowid
+        cursor.close()
+        return subsession_id
+
+    def update_subsession(self, subsession: Subsession) -> int:
+        self.save_listings(subsession.listings)
+        stmt = "UPDATE subsessions SET status = ?, finish_date = ? WHERE id = ?"
+        params = (subsession.status, subsession.finish_date, subsession.id)
+        cursor = self.conn.cursor()
+        cursor.execute(stmt, params)
+        self.conn.commit()
+        cursor.close()
+        return subsession.id
+
+    def get_listings(self, subsession_id) -> dict[int, Listing]:
+        sql = "SELECT * FROM listings WHERE subsession_id = ?"
+        cursor = self.conn.cursor()
+        cursor.execute(sql, (subsession_id,))
         rows = cursor.fetchall()
         cursor.close()
         return {int(row["id"]): Listing.from_row(row) for row in rows} if rows else {}
@@ -96,16 +184,31 @@ class Database:
         cursor.close()
         return Listing.from_row(row)
 
-    # only called within save_session, no commit required
-    def save_listings(self, listings: list[dict[str, str]]) -> int:
+    def save_listings(self, listings: dict[int, Listing]) -> int:
         """Saves a listing to the database. Commit is done by save_session"""
-        sql = "INSERT INTO LISTINGS (session_id, raw_data) VALUES (?, ?)"
-        data: list[tuple[str, str]] = [(d.get('session_id'), d.get('raw_data')) for d in listings]
+        sql = "INSERT INTO LISTINGS (subsession_id, raw_data) VALUES (?, ?)"
+        data: list[tuple[int, str]] = [
+            (listing.subsession_id, listing.raw_data) for listing in listings.values()]
         cursor = self.conn.cursor()
         listing_id = cursor.executemany(sql, data).lastrowid
         cursor.close()
-
         return listing_id
+
+    def get_duplicates(self, session_id: int):
+        sql = "SELECT * FROM known_duplicates WHERE session_id = ?"
+        cursor = self.conn.cursor()
+        rows = cursor.execute(sql, (session_id,)).fetchall()
+        return [(row['id_a'], row['id_b']) for row in rows] if rows else []
+
+    def save_duplicates(self, session_id: int, duplicates: list[tuple[int, int]]) -> None:
+        sql = "INSERT INTO known_duplicates (session_id, id_a, id_b) VALUES (?, ?, ?)"
+        values = [(session_id, duplicate[0], duplicate[1]) for duplicate in duplicates]
+        print(values)
+        cursor = self.conn.cursor()
+        cursor.executemany(sql, values)
+        self.conn.commit()
+        cursor.close()
+
 
     def _query(self, query: str) -> dict[Any, Any]:
         cursor = self.conn.cursor()

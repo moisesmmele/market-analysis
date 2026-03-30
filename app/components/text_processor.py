@@ -27,7 +27,7 @@ class TextProcessor:
         "find", "did", "down", "come", "made", "may", "part"
 
     ]
-    VIP_CHARS = {'+', '#', '.', ',', '-', '$', ' ', "'"}
+    VIP_CHARS = {'+', '#', '.', ',', '-', '$', ' ', "'", "\\"}
 
     @classmethod
     def remove_stopwords(cls, text: str) -> str:

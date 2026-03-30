@@ -3,7 +3,7 @@ from dataclasses import dataclass
 @dataclass
 class Listing:
     id: int = None
-    session_id: str = None
+    subsession_id: int = None
     raw_data: str = None
 
     @classmethod

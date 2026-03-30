@@ -22,7 +22,7 @@ config = to_namespace({
     "mode": {"dev": False},
     "database": {
         "file": data_dir.joinpath("database.db"),
-        "schema": app_root.joinpath("persistence").joinpath("schema.sql")
+        "schema": app_root.joinpath("persistence").joinpath("new-schema.sql")
     },
     "dir": {
         "debug": debug_dir,

@@ -1,5 +1,8 @@
 from collections import Counter
 from datetime import datetime
+
+from components.deduplicator import Deduplicator
+from enums import InfoType
 from pathlib import Path
 from typing import Any
 import json
@@ -9,10 +12,11 @@ from app.components import DynamicListingFactory
 from app.components import TextProcessor
 from app.loaders import MappingsLoader
 from app import config
-from enums import InfoType
 
 
 class Processor:
+
+    _deduplicator: Deduplicator = None
 
     _ngrams = None
     _job_levels: dict[str, list] = None
@@ -23,9 +27,6 @@ class Processor:
     _session: Session = None
 
     results: list[dict[str, Any]] = None
-
-    # TODO: 1. IMPLEMENT BOOL OR METRICS RETURNS FOR EVERY METHOD THAT RETURNS NONE / HAS EFFECT / CHANGES STATE
-    # TODO: 2. IMPLEMENT GUARD CLAUSES / EARLY RETURN ON PROCESS METHOD
 
     def __init__(self, session: Session, topics: list[Topic]) -> None:
         self._session = session
@@ -51,66 +52,18 @@ class Processor:
     def deduplicate(self) -> Metric:
         metric = Metric("deduplicate")
 
-        duplicates = set()
-        processed = 0
-        iterations = 0
+        sets = {index: ngrams["ngrams"] for index, ngrams in self._ngrams.items()}
+        self._deduplicator = Deduplicator()
+        self._deduplicator.run(self._session.id, sets)
 
-        for index_a, listing_a in self._listings.items():
-            processed += 1
-            # cache reference for set_a outside the inner loop
-            unigrams_a = self._ngrams[index_a].get("description").get("unigrams")
-            for index_b, listing_b in self._listings.items():
-                iterations += 1
-
-                # skip if same index
-                if index_a == index_b: continue
-
-                # early detect if external_id available and same
-                if listing_a.external_id and listing_b.external_id:
-                    if listing_a.external_id == listing_b.external_id:
-                        duplicates.add(index_b)
-                        continue
-
-                # early detect if description is exactly the same
-                if listing_a.description == listing_b.description:
-                    duplicates.add(index_b)
-                    continue
-
-                unigrams_b = self._ngrams[index_b].get("description").get("unigrams")
-
-                # get the size of intersection A in B
-                intersection_count = len(unigrams_a & unigrams_b)
-                if not intersection_count: continue
-
-                # get the size of union A with B
-                union_count = len(unigrams_a) + len(unigrams_b) - intersection_count
-
-                if not union_count: continue
-
-                # calculate Jaccard index by dividing intersection per union
-                jaccard_sim = intersection_count / union_count
-
-                # if sim above 90% mark it as duplicate
-                if jaccard_sim >= 0.90:
-                    duplicates.add(index_b)
-                    continue
-                    #print(f"Near duplicate detected for {index_a} in {index_b}: {jaccard_sim}")
-
-                # If between 80% and 90% we check title as tie-breaker
-                if 0.80 <= jaccard_sim <= 0.90:
-                    #print(f"some similarity detected for {index_a} in {index_b}: {jaccard_sim}")
-                    #print(f"using title as tie-braker: {listing_a.title} == {listing_b.title}?")
-                    if listing_a.title == listing_b.title:
-                        #print("Considered duplicate")
-                        duplicates.add(index_b)
-
-        for index in duplicates:
-            self._listings.pop(index)
+        for index in self._deduplicator.get_duplicate_indices():
+            if index in self._listings:
+                self._listings.pop(index)
 
         metric.success()
-        metric.append_info("duplicates", len(duplicates))
-        metric.append_info("iterations", iterations)
-        metric.append_info("processed", processed)
+        metric.append_info("duplicates", len(self._deduplicator.duplicate_pairs))
+        metric.append_info("iterations", self._deduplicator.iterations)
+        metric.append_info("processed", self._deduplicator.processed)
         return self.append_metric(metric)
 
     def match_and_count(self) -> Metric:
@@ -269,9 +222,10 @@ class Processor:
         self._listings: dict[int, DynamicListing] = {}
 
         processed: int = 0
-        for index, listing in self._session.listings.items():
-            self._listings[index] = DynamicListingFactory.create(index, listing.raw_data)
-            processed += 1
+        for subsession in self._session.subsessions.values():
+            for listing in subsession.listings.values():
+                self._listings[listing.id] = DynamicListingFactory.create(listing.id, listing.raw_data)
+                processed += 1
 
         metric.success()
         metric.append_info("processed", processed)
@@ -417,11 +371,11 @@ class Processor:
                     "id": self._session.id,
                     "title": self._session.title,
                     "description": self._session.description,
-                    "start_time": self._session.start_time.isoformat(),
-                    "finish_time": self._session.finish_time.isoformat(),
+                    "date": self._session.date.isoformat(),
                     "meta": self._session.meta,
-                    "listings": len(self._session.listings),
+                    "listings": len(self._listings),
                 }
+
 
             with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
@@ -538,12 +492,13 @@ class Processor:
                 dump["raw_listings"] = "Not Assigned"
             else:
                 dump["raw_listings"] = {}
-                for index, _listing in self._session.listings.items():
-                    dump["raw_listings"][index]= {
-                        "id": _listing.id,
-                        "session_id": _listing.session_id,
-                        "json": json.loads(_listing.raw_data)
-                    }
+                for subs in self._session.subsessions.values():
+                    for index, _listing in subs.listings.items():
+                        dump["raw_listings"][index]= {
+                            "id": _listing.id,
+                            "subsession_id": _listing.subsession_id,
+                            "json": json.loads(_listing.raw_data)
+                        }
 
             with open(debug_dir.joinpath(_filename), "w") as out:
                 json.dump(dump, out, indent=2)
